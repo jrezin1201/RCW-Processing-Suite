@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 def extract_project_name_from_b3(ws) -> Optional[str]:
     """
-    Extract project name from cell B3 (between first and second hyphen).
+    Extract project name from cell B3 or B2 (between first and second hyphen).
+    Checks B2 first, then B3 as fallback.
 
     Args:
         ws: Worksheet object (openpyxl) or data list (pandas)
@@ -22,20 +23,23 @@ def extract_project_name_from_b3(ws) -> Optional[str]:
     """
     # For openpyxl worksheet
     if hasattr(ws, 'cell'):
-        cell_value = ws.cell(row=3, column=2).value  # B3
-        if cell_value:
-            # Split by hyphens and get the second part (between first and second hyphen)
-            parts = str(cell_value).split('-')
-            if len(parts) >= 2:
-                project_name = parts[1].strip()
-                logger.info(f"Found project name: {project_name}")
-                return project_name
+        # Try B2 first (some files have data one row up)
+        for row in [2, 3]:
+            cell_value = ws.cell(row=row, column=2).value  # B2 or B3
+            if cell_value:
+                # Split by hyphens and get the second part (between first and second hyphen)
+                parts = str(cell_value).split('-')
+                if len(parts) >= 2:
+                    project_name = parts[1].strip()
+                    logger.info(f"Found project name in B{row}: {project_name}")
+                    return project_name
     return None
 
 
 def extract_house_string_from_b5(ws) -> Optional[str]:
     """
-    Extract house string from cell B5 (text after "PH## - ").
+    Extract house string from cell B5 or B4 (text after "PH## - ").
+    Checks B4 first, then B5 as fallback.
 
     Args:
         ws: Worksheet object (openpyxl) or data list (pandas)
@@ -45,21 +49,24 @@ def extract_house_string_from_b5(ws) -> Optional[str]:
     """
     # For openpyxl worksheet
     if hasattr(ws, 'cell'):
-        cell_value = ws.cell(row=5, column=2).value  # B5
-        if cell_value:
-            # Find the pattern "PH## - " and extract everything after it
-            import re
-            match = re.search(r'PH\d{2}\s*-\s*(.+)', str(cell_value))
-            if match:
-                house_string = match.group(1).strip()
-                logger.info(f"Found house string: {house_string}")
-                return house_string
+        # Try B4 first, then B5 (some files have data one row up)
+        for row in [4, 5]:
+            cell_value = ws.cell(row=row, column=2).value  # B4 or B5
+            if cell_value:
+                # Find the pattern "PH## - " and extract everything after it
+                import re
+                match = re.search(r'PH\d{2}\s*-\s*(.+)', str(cell_value))
+                if match:
+                    house_string = match.group(1).strip()
+                    logger.info(f"Found house string in B{row}: {house_string}")
+                    return house_string
     return None
 
 
 def extract_phase_from_b5(ws) -> Optional[str]:
     """
-    Extract phase number from cell B5 (PHxx pattern).
+    Extract phase number from cell B5 or B4 (PHxx pattern).
+    Checks B4 first, then B5 as fallback.
 
     Args:
         ws: Worksheet object (openpyxl) or data list (pandas)
@@ -69,14 +76,16 @@ def extract_phase_from_b5(ws) -> Optional[str]:
     """
     # For openpyxl worksheet
     if hasattr(ws, 'cell'):
-        cell_value = ws.cell(row=5, column=2).value  # B5
-        if cell_value:
-            phase_pattern = re.compile(r'PH(\d{2})', re.IGNORECASE)
-            match = phase_pattern.search(str(cell_value))
-            if match:
-                phase_num = match.group(1).lstrip('0')  # Remove leading zeros
-                logger.info(f"Found phase {phase_num} from {match.group(0)} in B5")
-                return phase_num if phase_num else None
+        # Try B4 first, then B5 (some files have data one row up)
+        for row in [4, 5]:
+            cell_value = ws.cell(row=row, column=2).value  # B4 or B5
+            if cell_value:
+                phase_pattern = re.compile(r'PH(\d{2})', re.IGNORECASE)
+                match = phase_pattern.search(str(cell_value))
+                if match:
+                    phase_num = match.group(1).lstrip('0')  # Remove leading zeros
+                    logger.info(f"Found phase {phase_num} from {match.group(0)} in B{row}")
+                    return phase_num if phase_num else None
     return None
 
 
@@ -250,33 +259,40 @@ def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Op
     house_string = None
     phase = None
 
-    # Try to extract from specific cells (B3 and B5)
+    # Try to extract from specific cells (B2/B3 and B4/B5)
     if len(data) >= 5:
-        # B3 is row 2, column 1 in 0-indexed data
-        if len(data) >= 3 and len(data[2]) >= 2:
-            cell_b3 = data[2][1]  # Row 3, Column B
-            if cell_b3:
-                parts = str(cell_b3).split('-')
-                if len(parts) >= 2:
-                    project_name = parts[1].strip()
-                    logger.info(f"Found project name: {project_name}")
+        # Try B2 first, then B3 for project name (row 1, then row 2 in 0-indexed data)
+        for row_idx, row_name in [(1, 'B2'), (2, 'B3')]:
+            if not project_name and len(data) > row_idx and len(data[row_idx]) >= 2:
+                cell_value = data[row_idx][1]  # Column B
+                if cell_value and pd.notna(cell_value):
+                    parts = str(cell_value).split('-')
+                    if len(parts) >= 2:
+                        project_name = parts[1].strip()
+                        logger.info(f"Found project name in {row_name}: {project_name}")
+                        break
 
-        # B5 is row 4, column 1 in 0-indexed data
-        if len(data) >= 5 and len(data[4]) >= 2:
-            cell_b5 = data[4][1]  # Row 5, Column B
-            if cell_b5:
-                # Extract phase
-                phase_pattern = re.compile(r'PH(\d{2})', re.IGNORECASE)
-                match = phase_pattern.search(str(cell_b5))
-                if match:
-                    phase = match.group(1).lstrip('0')
-                    logger.info(f"Found phase {phase} from {match.group(0)} in B5")
+        # Try B4 first, then B5 for phase and house string (row 3, then row 4 in 0-indexed data)
+        for row_idx, row_name in [(3, 'B4'), (4, 'B5')]:
+            if not phase and len(data) > row_idx and len(data[row_idx]) >= 2:
+                cell_value = data[row_idx][1]  # Column B
+                if cell_value and pd.notna(cell_value):
+                    # Extract phase
+                    phase_pattern = re.compile(r'PH(\d{2})', re.IGNORECASE)
+                    match = phase_pattern.search(str(cell_value))
+                    if match:
+                        phase = match.group(1).lstrip('0')
+                        logger.info(f"Found phase {phase} from {match.group(0)} in {row_name}")
 
-                # Extract house string
-                house_match = re.search(r'PH\d{2}\s*-\s*(.+)', str(cell_b5))
-                if house_match:
-                    house_string = house_match.group(1).strip()
-                    logger.info(f"Found house string: {house_string}")
+                    # Extract house string
+                    if not house_string:
+                        house_match = re.search(r'PH\d{2}\s*-\s*(.+)', str(cell_value))
+                        if house_match:
+                            house_string = house_match.group(1).strip()
+                            logger.info(f"Found house string in {row_name}: {house_string}")
+
+                    if phase and house_string:
+                        break
 
     # Fallback to column D for phase if not found
     if not phase:
