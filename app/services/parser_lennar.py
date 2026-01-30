@@ -10,6 +10,76 @@ from app.models.schemas import ParsedRow, QAMeta
 logger = logging.getLogger(__name__)
 
 
+def extract_project_name_from_b3(ws) -> Optional[str]:
+    """
+    Extract project name from cell B3 (between first and second hyphen).
+
+    Args:
+        ws: Worksheet object (openpyxl) or data list (pandas)
+
+    Returns:
+        Project name string, or None if not found
+    """
+    # For openpyxl worksheet
+    if hasattr(ws, 'cell'):
+        cell_value = ws.cell(row=3, column=2).value  # B3
+        if cell_value:
+            # Split by hyphens and get the second part (between first and second hyphen)
+            parts = str(cell_value).split('-')
+            if len(parts) >= 2:
+                project_name = parts[1].strip()
+                logger.info(f"Found project name: {project_name}")
+                return project_name
+    return None
+
+
+def extract_house_string_from_b5(ws) -> Optional[str]:
+    """
+    Extract house string from cell B5 (text after "PH## - ").
+
+    Args:
+        ws: Worksheet object (openpyxl) or data list (pandas)
+
+    Returns:
+        House string, or None if not found
+    """
+    # For openpyxl worksheet
+    if hasattr(ws, 'cell'):
+        cell_value = ws.cell(row=5, column=2).value  # B5
+        if cell_value:
+            # Find the pattern "PH## - " and extract everything after it
+            import re
+            match = re.search(r'PH\d{2}\s*-\s*(.+)', str(cell_value))
+            if match:
+                house_string = match.group(1).strip()
+                logger.info(f"Found house string: {house_string}")
+                return house_string
+    return None
+
+
+def extract_phase_from_b5(ws) -> Optional[str]:
+    """
+    Extract phase number from cell B5 (PHxx pattern).
+
+    Args:
+        ws: Worksheet object (openpyxl) or data list (pandas)
+
+    Returns:
+        Phase number as string (without leading zeros), or None if not found
+    """
+    # For openpyxl worksheet
+    if hasattr(ws, 'cell'):
+        cell_value = ws.cell(row=5, column=2).value  # B5
+        if cell_value:
+            phase_pattern = re.compile(r'PH(\d{2})', re.IGNORECASE)
+            match = phase_pattern.search(str(cell_value))
+            if match:
+                phase_num = match.group(1).lstrip('0')  # Remove leading zeros
+                logger.info(f"Found phase {phase_num} from {match.group(0)} in B5")
+                return phase_num if phase_num else None
+    return None
+
+
 def extract_phase_from_column_d(ws, column_map: Dict[str, int], max_rows: int = 100) -> Optional[str]:
     """
     Extract phase number from column D by looking for PH pattern (e.g., PH07).
@@ -64,7 +134,7 @@ def extract_phase_from_pandas_data(data: List, max_rows: int = 100) -> Optional[
     return None
 
 
-def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
+def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Optional[str], Optional[str]]:
     """
     Parse a Lennar scheduled tasks Excel export (supports both .xls and .xlsx).
 
@@ -72,7 +142,7 @@ def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optiona
         filepath: Path to the Excel file
 
     Returns:
-        Tuple of (parsed rows, QA metadata, phase number)
+        Tuple of (parsed rows, QA metadata, phase number, project name, house string)
     """
     # Try to detect format by actually attempting to parse
     # This handles cases where the extension doesn't match the actual format
@@ -99,7 +169,7 @@ def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optiona
                 raise Exception(f"Could not parse file as either .xls or .xlsx format: {str(e)[:200]}")
 
 
-def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
+def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Optional[str], Optional[str]]:
     """Parse using openpyxl for .xlsx files."""
     import openpyxl
     from openpyxl.worksheet.worksheet import Worksheet
@@ -107,14 +177,18 @@ def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optiona
     wb = openpyxl.load_workbook(filepath, data_only=True)
     ws = wb.active
 
-    # Extract phase from column D
-    phase = extract_phase_from_column_d(ws, {}, max_rows=100)
+    # Extract metadata
+    project_name = extract_project_name_from_b3(ws)
+    phase = extract_phase_from_b5(ws)  # Try B5 first
+    if not phase:  # Fallback to column D if not found in B5
+        phase = extract_phase_from_column_d(ws, {}, max_rows=100)
+    house_string = extract_house_string_from_b5(ws)
 
     # Find header row
     header_row_idx, column_map = find_header_row_openpyxl(ws)
 
     if header_row_idx is None:
-        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0), phase
+        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0), phase, project_name, house_string
 
     # Parse data rows
     parsed_rows = []
@@ -146,10 +220,10 @@ def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optiona
         qa_meta.rows_parsed += 1
 
     wb.close()
-    return parsed_rows, qa_meta, phase
+    return parsed_rows, qa_meta, phase, project_name, house_string
 
 
-def parse_with_pandas(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
+def parse_with_pandas(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Optional[str], Optional[str]]:
     """Parse using pandas for .xls files (old format)."""
     import pandas as pd
 
@@ -163,7 +237,7 @@ def parse_with_pandas(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[
     return parse_with_pandas_df(df)
 
 
-def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
+def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Optional[str], Optional[str]]:
     """Parse a pandas DataFrame."""
     import pandas as pd
 
@@ -171,14 +245,48 @@ def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
     data = df.values.tolist()
     headers = df.columns.tolist()
 
-    # Extract phase from column D
-    phase = extract_phase_from_pandas_data(data, max_rows=100)
+    # Extract metadata from specific cells
+    project_name = None
+    house_string = None
+    phase = None
+
+    # Try to extract from specific cells (B3 and B5)
+    if len(data) >= 5:
+        # B3 is row 2, column 1 in 0-indexed data
+        if len(data) >= 3 and len(data[2]) >= 2:
+            cell_b3 = data[2][1]  # Row 3, Column B
+            if cell_b3:
+                parts = str(cell_b3).split('-')
+                if len(parts) >= 2:
+                    project_name = parts[1].strip()
+                    logger.info(f"Found project name: {project_name}")
+
+        # B5 is row 4, column 1 in 0-indexed data
+        if len(data) >= 5 and len(data[4]) >= 2:
+            cell_b5 = data[4][1]  # Row 5, Column B
+            if cell_b5:
+                # Extract phase
+                phase_pattern = re.compile(r'PH(\d{2})', re.IGNORECASE)
+                match = phase_pattern.search(str(cell_b5))
+                if match:
+                    phase = match.group(1).lstrip('0')
+                    logger.info(f"Found phase {phase} from {match.group(0)} in B5")
+
+                # Extract house string
+                house_match = re.search(r'PH\d{2}\s*-\s*(.+)', str(cell_b5))
+                if house_match:
+                    house_string = house_match.group(1).strip()
+                    logger.info(f"Found house string: {house_string}")
+
+    # Fallback to column D for phase if not found
+    if not phase:
+        phase = extract_phase_from_pandas_data(data, max_rows=100)
 
     # Find header row in data
     header_row_idx, column_map = find_header_row_pandas(headers, data)
 
     if header_row_idx is None:
-        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0), phase
+        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0), phase, project_name, house_string
 
     # Parse data rows
     parsed_rows = []
@@ -212,7 +320,7 @@ def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
         parsed_rows.append(parsed_row)
         qa_meta.rows_parsed += 1
 
-    return parsed_rows, qa_meta, phase
+    return parsed_rows, qa_meta, phase, project_name, house_string
 
 
 def find_header_row_openpyxl(ws) -> Tuple[Optional[int], Dict[str, int]]:

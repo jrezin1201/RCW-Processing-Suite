@@ -31,7 +31,7 @@ def process_lennar_file(job_id: str, filepath: str) -> None:
 
         # Step 1: Parse the Excel file
         update_job_progress(job_id, 0.1, "Parsing Excel file")
-        parsed_rows, qa_meta, phase = parse_lennar_export(filepath)
+        parsed_rows, qa_meta, phase, project_name, house_string = parse_lennar_export(filepath)
 
         if not parsed_rows:
             set_job(job_id, {
@@ -49,7 +49,10 @@ def process_lennar_file(job_id: str, filepath: str) -> None:
 
         # Step 3: Write output Excel file
         update_job_progress(job_id, 0.8, "Generating output Excel file")
-        output_path = write_summary_excel(summary_rows, qa_report, job_id, phase=phase)
+        output_path = write_summary_excel(
+            summary_rows, qa_report, job_id,
+            phase=phase, project_name=project_name, house_string=house_string
+        )
 
         # Step 4: Prepare result data
         result_data = {
