@@ -45,18 +45,19 @@ def write_summary_excel(
         bottom=Side(style="thin")
     )
 
-    # Write title row (placeholders)
-    ws["A1"] = "Project Name:"
-    ws["C1"] = "Phase:"
-    ws["E1"] = "Job #:"
-    ws["A1"].font = header_font
-    ws["C1"].font = header_font
-    ws["E1"].font = header_font
+    # Write title row (placeholders) - shifted one column to the right
+    ws["B1"] = "Project Name:"
+    ws["D1"] = "Phase:"
+    ws["F1"] = "Job #:"
+    ws["B1"].font = header_font
+    ws["D1"].font = header_font
+    ws["F1"].font = header_font
 
-    # Write headers
-    headers = ["LOT", "PLAN", "EXT PRIME", "EXTERE", "EXTERIOR UA", "INTERIOR", "Total"]
+    # Write headers - starting from column B (column 2)
+    headers = ["LOT", "PLAN", "EXT PRIME", "EXTERE", "EXTERIOR UA", "INTERIOR",
+               "Rolls Walls Final", "Touch Up", "Q4 Reversal", "Total"]
     header_row = 3
-    for col_idx, header in enumerate(headers, 1):
+    for col_idx, header in enumerate(headers, 2):  # Start from column 2 (B)
         cell = ws.cell(row=header_row, column=col_idx, value=header)
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -64,52 +65,71 @@ def write_summary_excel(
         if header == "Total":
             cell.fill = yellow_fill
 
-    # Write data rows
+    # Write data rows - starting from column B (column 2)
     data_start_row = header_row + 1
     for row_idx, summary_row in enumerate(summary_rows, data_start_row):
-        ws.cell(row=row_idx, column=1, value=summary_row.lot_block).border = thin_border
-        ws.cell(row=row_idx, column=2, value=summary_row.plan).border = thin_border
+        # Convert lot_block to number if possible
+        try:
+            lot_value = int(summary_row.lot_block)
+        except (ValueError, TypeError):
+            try:
+                lot_value = float(summary_row.lot_block)
+            except (ValueError, TypeError):
+                lot_value = summary_row.lot_block  # Keep as string if not numeric
+
+        ws.cell(row=row_idx, column=2, value=lot_value).border = thin_border  # Column B
+        ws.cell(row=row_idx, column=3, value=summary_row.plan).border = thin_border       # Column C
 
         # Money columns with formatting
         money_values = [
-            summary_row.ext_prime,
-            summary_row.extere,
-            summary_row.exterior_ua,
-            summary_row.interior,
-            summary_row.total
+            summary_row.ext_prime,      # Column D
+            summary_row.extere,          # Column E
+            summary_row.exterior_ua,     # Column F
+            summary_row.interior,        # Column G
+            0,                          # Column H - Rolls Walls Final
+            0,                          # Column I - Touch Up
+            0,                          # Column J - Q4 Reversal
+            summary_row.total           # Column K - Total
         ]
 
-        for col_idx, value in enumerate(money_values, 3):
+        for col_idx, value in enumerate(money_values, 4):  # Start from column 4 (D)
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
             cell.number_format = currency_format
             cell.border = thin_border
-            if col_idx == 7:  # Total column
+            if col_idx == 11:  # Total column (now column K)
                 cell.fill = yellow_fill
 
-    # Add total row
+    # Add total row - starting from column B
     total_row = data_start_row + len(summary_rows)
-    ws.cell(row=total_row, column=1, value="TOTAL").font = header_font
-    ws.cell(row=total_row, column=1).border = thin_border
+    ws.cell(row=total_row, column=2, value="TOTAL").font = header_font  # Column B
+    ws.cell(row=total_row, column=2).border = thin_border
 
-    # Calculate and write column totals
-    for col_idx in range(3, 8):
-        col_letter = get_column_letter(col_idx)
-        formula = f"=SUM({col_letter}{data_start_row}:{col_letter}{total_row-1})"
-        cell = ws.cell(row=total_row, column=col_idx, value=formula)
-        cell.number_format = currency_format
-        cell.font = header_font
+    # Add empty cells with borders for columns C through J (no totals)
+    for col_idx in range(3, 11):  # Columns 3-10 (C-J)
+        cell = ws.cell(row=total_row, column=col_idx, value="")
         cell.border = thin_border
-        if col_idx == 7:  # Total column
-            cell.fill = yellow_fill
 
-    # Adjust column widths
-    ws.column_dimensions["A"].width = 15
-    ws.column_dimensions["B"].width = 15
-    ws.column_dimensions["C"].width = 12
-    ws.column_dimensions["D"].width = 12
-    ws.column_dimensions["E"].width = 14
-    ws.column_dimensions["F"].width = 12
-    ws.column_dimensions["G"].width = 12
+    # Calculate and write total ONLY for the Total column (column K)
+    col_letter = get_column_letter(11)  # Column K
+    formula = f"=SUM({col_letter}{data_start_row}:{col_letter}{total_row-1})"
+    cell = ws.cell(row=total_row, column=11, value=formula)
+    cell.number_format = currency_format
+    cell.font = header_font
+    cell.border = thin_border
+    cell.fill = yellow_fill
+
+    # Adjust column widths - A is narrow, B-K contain the data
+    ws.column_dimensions["A"].width = 2.5  # Narrow column (approximately 20px)
+    ws.column_dimensions["B"].width = 15   # LOT
+    ws.column_dimensions["C"].width = 15   # PLAN
+    ws.column_dimensions["D"].width = 12   # EXT PRIME
+    ws.column_dimensions["E"].width = 12   # EXTERE
+    ws.column_dimensions["F"].width = 14   # EXTERIOR UA
+    ws.column_dimensions["G"].width = 12   # INTERIOR
+    ws.column_dimensions["H"].width = 16   # Rolls Walls Final
+    ws.column_dimensions["I"].width = 12   # Touch Up
+    ws.column_dimensions["J"].width = 14   # Q4 Reversal
+    ws.column_dimensions["K"].width = 12   # Total
 
     # Create QA sheet
     qa_ws = wb.create_sheet(title="QA Report")

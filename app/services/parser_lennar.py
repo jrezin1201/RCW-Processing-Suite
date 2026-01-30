@@ -3,13 +3,68 @@ from typing import List, Dict, Tuple, Optional, Any
 from datetime import datetime
 import os
 import logging
+import re
 
 from app.models.schemas import ParsedRow, QAMeta
 
 logger = logging.getLogger(__name__)
 
 
-def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta]:
+def extract_phase_from_column_d(ws, column_map: Dict[str, int], max_rows: int = 100) -> Optional[str]:
+    """
+    Extract phase number from column D by looking for PH pattern (e.g., PH07).
+
+    Args:
+        ws: Worksheet object (openpyxl) or data list (pandas)
+        column_map: Column mapping dictionary
+        max_rows: Maximum rows to scan
+
+    Returns:
+        Phase number as string (e.g., "7" from "PH07"), or None if not found
+    """
+    phase_pattern = re.compile(r'PH(\d{2})', re.IGNORECASE)
+
+    # For openpyxl worksheet
+    if hasattr(ws, 'iter_rows'):
+        for row in ws.iter_rows(min_row=1, max_row=max_rows, values_only=True):
+            if row and len(row) > 3:  # Column D is index 3
+                cell_value = str(row[3]) if row[3] else ""
+                match = phase_pattern.search(cell_value)
+                if match:
+                    phase_num = match.group(1).lstrip('0')  # Remove leading zeros
+                    logger.info(f"Found phase {phase_num} from {match.group(0)} in column D")
+                    return phase_num if phase_num else None
+
+    return None
+
+
+def extract_phase_from_pandas_data(data: List, max_rows: int = 100) -> Optional[str]:
+    """
+    Extract phase number from column D in pandas data.
+
+    Args:
+        data: List of row data
+        max_rows: Maximum rows to scan
+
+    Returns:
+        Phase number as string, or None if not found
+    """
+    phase_pattern = re.compile(r'PH(\d{2})', re.IGNORECASE)
+
+    rows_to_check = min(max_rows, len(data))
+    for row in data[:rows_to_check]:
+        if row and len(row) > 3:  # Column D is index 3
+            cell_value = str(row[3]) if row[3] else ""
+            match = phase_pattern.search(cell_value)
+            if match:
+                phase_num = match.group(1).lstrip('0')  # Remove leading zeros
+                logger.info(f"Found phase {phase_num} from {match.group(0)} in column D")
+                return phase_num if phase_num else None
+
+    return None
+
+
+def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
     """
     Parse a Lennar scheduled tasks Excel export (supports both .xls and .xlsx).
 
@@ -17,7 +72,7 @@ def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta]:
         filepath: Path to the Excel file
 
     Returns:
-        Tuple of (parsed rows, QA metadata)
+        Tuple of (parsed rows, QA metadata, phase number)
     """
     # Try to detect format by actually attempting to parse
     # This handles cases where the extension doesn't match the actual format
@@ -44,7 +99,7 @@ def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta]:
                 raise Exception(f"Could not parse file as either .xls or .xlsx format: {str(e)[:200]}")
 
 
-def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta]:
+def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
     """Parse using openpyxl for .xlsx files."""
     import openpyxl
     from openpyxl.worksheet.worksheet import Worksheet
@@ -52,11 +107,14 @@ def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta]:
     wb = openpyxl.load_workbook(filepath, data_only=True)
     ws = wb.active
 
+    # Extract phase from column D
+    phase = extract_phase_from_column_d(ws, {}, max_rows=100)
+
     # Find header row
     header_row_idx, column_map = find_header_row_openpyxl(ws)
 
     if header_row_idx is None:
-        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0)
+        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0), phase
 
     # Parse data rows
     parsed_rows = []
@@ -88,10 +146,10 @@ def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta]:
         qa_meta.rows_parsed += 1
 
     wb.close()
-    return parsed_rows, qa_meta
+    return parsed_rows, qa_meta, phase
 
 
-def parse_with_pandas(filepath: str) -> Tuple[List[ParsedRow], QAMeta]:
+def parse_with_pandas(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
     """Parse using pandas for .xls files (old format)."""
     import pandas as pd
 
@@ -105,7 +163,7 @@ def parse_with_pandas(filepath: str) -> Tuple[List[ParsedRow], QAMeta]:
     return parse_with_pandas_df(df)
 
 
-def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta]:
+def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str]]:
     """Parse a pandas DataFrame."""
     import pandas as pd
 
@@ -113,11 +171,14 @@ def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta]:
     data = df.values.tolist()
     headers = df.columns.tolist()
 
+    # Extract phase from column D
+    phase = extract_phase_from_pandas_data(data, max_rows=100)
+
     # Find header row in data
     header_row_idx, column_map = find_header_row_pandas(headers, data)
 
     if header_row_idx is None:
-        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0)
+        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0), phase
 
     # Parse data rows
     parsed_rows = []
@@ -151,7 +212,7 @@ def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta]:
         parsed_rows.append(parsed_row)
         qa_meta.rows_parsed += 1
 
-    return parsed_rows, qa_meta
+    return parsed_rows, qa_meta, phase
 
 
 def find_header_row_openpyxl(ws) -> Tuple[Optional[int], Dict[str, int]]:

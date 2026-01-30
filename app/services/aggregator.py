@@ -77,6 +77,9 @@ def aggregate_data(
         }
     )
 
+    # Track the order in which lot/plan combinations first appear
+    appearance_order: Dict[Tuple[str, str], int] = {}
+
     # Track statistics
     counts_per_bucket: Dict[str, int] = defaultdict(int)
     unmapped_tasks: List[str] = []
@@ -102,6 +105,10 @@ def aggregate_data(
 
         # Create group key with cleaned values
         group_key = (cleaned_lot, combined_plan)
+
+        # Track the order of first appearance
+        if group_key not in appearance_order:
+            appearance_order[group_key] = len(appearance_order)
 
         # Add to the appropriate bucket
         if bucket in aggregated_data[group_key]:
@@ -141,8 +148,8 @@ def aggregate_data(
         )
         summary_rows.append(summary_row)
 
-    # Sort summary rows by lot_block and plan
-    summary_rows.sort(key=lambda x: (x.lot_block, x.plan))
+    # Sort summary rows by their original appearance order in the input
+    summary_rows.sort(key=lambda x: appearance_order.get((x.lot_block, x.plan), float('inf')))
 
     # Get top unmapped examples
     unmapped_counter = Counter(unmapped_tasks)
