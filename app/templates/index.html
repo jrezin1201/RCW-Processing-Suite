@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Gas & Rig Job Cost</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Gas & Rig Job Cost</h1>
+
+      <div class="warning">
+        ✅ IMPORTANT: Upload must be <b>.XLSX</b> (Excel Workbook).<br />
+        ❌ Do NOT upload .xls, .csv, or Google Sheets exports.
+      </div>
+
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %}
+
+      <form
+        action="/process"
+        method="post"
+        enctype="multipart/form-data"
+        class="card"
+      >
+        <label class="label">Upload Excel (.XLSX)</label>
+        <input type="file" name="file" accept=".xlsx" required />
+        <button type="submit">Generate Report</button>
+        <p class="hint">
+          Output will include: JobNumber, Hours, Dollars (@ $0.75/hr).
+        </p>
+      </form>
+      <div class="example">
+        <p class="example-title">
+          The file you're uploading should look like this:
+        </p>
+
+        <img
+          src="/static/example_format.png"
+          alt="Example of correct Excel format"
+          class="example-image"
+        />
+
+        <p class="example-hint">
+          Location must start with a 4-digit job number, and total hours must be
+          present.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

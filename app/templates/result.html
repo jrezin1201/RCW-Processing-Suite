@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Gas & Rig Job Cost - Result</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Report Ready</h1>
+
+    <div class="summary-box">
+      <h2>Summary</h2>
+      <div class="summary-row">
+        <span class="summary-label">Total Hours:</span>
+        <span class="summary-value">{{ "%.2f"|format(total_hours) }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Total Dollars:</span>
+        <span class="summary-value">${{ "%.2f"|format(total_dollars) }}</span>
+      </div>
+    </div>
+
+    <p class="hint">Download your output file below.</p>
+    <a class="download" href="/download/{{ token }}">Download output.xlsx</a>
+
+    <h2>Job Details</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>JobNumber</th>
+          <th>Dollars</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.job_number }}</td>
+          <td>${{ "%.2f"|format(r.dollars) }}</td>
+          <td>{{ "%.2f"|format(r.hours) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="hint"><a href="/">Process another file</a></p>
+  </div>
+</body>
+</html>

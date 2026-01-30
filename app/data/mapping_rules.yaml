@@ -1,0 +1,64 @@
+# Mapping rules for classifying tasks into buckets
+# Rules are evaluated in order - first match wins
+
+rules:
+  # EXT PRIME - Exterior Prime tasks
+  - bucket: "EXT PRIME"
+    all_contains:
+      - "exterior"
+      - "prime"
+
+  # EXTERIOR UA - Exterior with UA designation
+  - bucket: "EXTERIOR UA"
+    all_contains:
+      - "exterior"
+      - "[ua]"
+
+  # Alternative UA patterns
+  - bucket: "EXTERIOR UA"
+    all_contains:
+      - "exterior"
+      - "ua"
+    none_contains:
+      - "prime"
+
+  # INTERIOR - Any interior work
+  - bucket: "INTERIOR"
+    any_contains:
+      - "interior"
+
+  # EXTERE - General exterior work (not prime, not UA)
+  - bucket: "EXTERE"
+    all_contains:
+      - "exterior"
+    none_contains:
+      - "prime"
+      - "[ua]"
+      - "ua"
+
+  # Additional patterns for painting tasks
+  - bucket: "EXT PRIME"
+    all_contains:
+      - "painting"
+      - "ext"
+      - "prime"
+
+  - bucket: "EXTERIOR UA"
+    all_contains:
+      - "painting"
+      - "ext"
+      - "ua"
+
+  - bucket: "INTERIOR"
+    all_contains:
+      - "painting"
+      - "int"
+
+  - bucket: "EXTERE"
+    all_contains:
+      - "painting"
+      - "ext"
+    none_contains:
+      - "prime"
+      - "ua"
+      - "int"

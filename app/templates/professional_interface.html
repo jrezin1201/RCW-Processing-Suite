@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCW Processing Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+            background: #1a1d23;
+            color: #e4e6eb;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: #2b2f38;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #3a3f4b;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: auto;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #f5a623, #f76b1c);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 18px;
+        }
+
+        .app-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e4e6eb;
+        }
+
+        .company-name {
+            font-size: 12px;
+            color: #8b92a0;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .top-bar-actions button {
+            background: transparent;
+            border: none;
+            color: #8b92a0;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .top-bar-actions button:hover {
+            background: #3a3f4b;
+            color: #e4e6eb;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 50px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: #24272e;
+            border-right: 1px solid #3a3f4b;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            color: #b8bec9;
+        }
+
+        .sidebar-item:hover {
+            background: #2b2f38;
+            border-left-color: #4a9eff;
+            color: #e4e6eb;
+        }
+
+        .sidebar-item.active {
+            background: #f5a62315;
+            border-left-color: #f5a623;
+            color: #f5a623;
+        }
+
+        .sidebar-item.active .icon {
+            background: #f5a623;
+            color: #1a1d23;
+        }
+
+        .sidebar-item .icon {
+            width: 32px;
+            height: 32px;
+            background: #3a3f4b;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .sidebar-item .text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-item .title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sidebar-item .subtitle {
+            font-size: 11px;
+            color: #8b92a0;
+            margin-top: 2px;
+        }
+
+        .sidebar-item .badge {
+            margin-left: auto;
+            background: #3a3f4b;
+            color: #b8bec9;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #1a1d23;
+        }
+
+        /* Project Header */
+        .project-header {
+            margin-bottom: 30px;
+        }
+
+        .project-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #8b92a0;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .project-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #e4e6eb;
+            margin-bottom: 10px;
+        }
+
+        .project-subtitle {
+            color: #8b92a0;
+            font-size: 14px;
+        }
+
+        /* Instructions Card */
+        .instructions-card {
+            background: #24272e;
+            border: 1px solid #3a3f4b;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .instructions-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .instructions-icon {
+            width: 40px;
+            height: 40px;
+            background: #3a3f4b;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .instructions-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e4e6eb;
+        }
+
+        .instructions-content {
+            color: #b8bec9;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* User Guide Banner */
+        .user-guide-banner {
+            background: linear-gradient(135deg, #2b3f56, #1e2936);
+            border: 1px solid #3a5f8a;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .user-guide-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .user-guide-icon {
+            font-size: 24px;
+        }
+
+        .user-guide-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .user-guide-description {
+            color: #a8c0d8;
+            font-size: 15px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .quick-tip {
+            background: #f5a62320;
+            border-left: 3px solid #f5a623;
+            padding: 12px 15px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-tip-icon {
+            color: #f5a623;
+            font-size: 18px;
+        }
+
+        .quick-tip-text {
+            color: #e4e6eb;
+            font-size: 13px;
+        }
+
+        /* Workflow Section */
+        .workflow-section {
+            margin-top: 30px;
+        }
+
+        .workflow-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .workflow-icon {
+            font-size: 24px;
+        }
+
+        .workflow-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e4e6eb;
+        }
+
+        .workflow-subtitle {
+            color: #8b92a0;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        /* Step Cards */
+        .step-card {
+            background: #24272e;
+            border: 1px solid #3a3f4b;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .step-card:hover {
+            border-color: #4a9eff;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.1);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 36px;
+            height: 36px;
+            background: #f5a623;
+            color: #1a1d23;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e4e6eb;
+        }
+
+        .step-content {
+            margin-left: 51px;
+            color: #b8bec9;
+        }
+
+        .step-description {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .step-details {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-details li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #8b92a0;
+            font-size: 14px;
+        }
+
+        .step-details li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #4a9eff;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            background: #2b2f38;
+            border: 2px dashed #3a3f4b;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #4a9eff;
+            background: #2f3541;
+        }
+
+        .upload-area.dragover {
+            border-color: #f5a623;
+            background: #f5a62310;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #4a9eff;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #e4e6eb;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #8b92a0;
+            font-size: 13px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4a9eff, #3b8fe6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: #3a3f4b;
+            color: #e4e6eb;
+        }
+
+        .btn-secondary:hover {
+            background: #454b59;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            background: #2b2f38;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4a9eff, #3b8fe6);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        /* Results */
+        .result-container {
+            background: #24272e;
+            border: 1px solid #3a3f4b;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-success {
+            border-left: 4px solid #10b981;
+        }
+
+        .result-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .result-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .result-icon.success {
+            background: #10b98120;
+            color: #10b981;
+        }
+
+        .result-icon.error {
+            background: #ef444420;
+            color: #ef4444;
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e4e6eb;
+        }
+
+        .result-details {
+            color: #8b92a0;
+            line-height: 1.6;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #3a3f4b;
+            border-top: 3px solid #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar-item .text,
+            .sidebar-item .badge {
+                display: none;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="logo-section">
+            <div class="logo">RC</div>
+            <div>
+                <div class="app-title">RCW Processing Suite</div>
+                <div class="company-name">R.C. Wendt Painting, Inc</div>
+            </div>
+        </div>
+        <div class="top-bar-actions">
+            <button onclick="location.href='/docs'">API Docs</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-item active" onclick="showSection('home', this)">
+                <div class="icon">🏠</div>
+                <div class="text">
+                    <div class="title">Home</div>
+                    <div class="subtitle">Overview & help</div>
+                </div>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('gasrig', this)">
+                <div class="icon">⚡</div>
+                <div class="text">
+                    <div class="title">Gas & Rig / Hours</div>
+                    <div class="subtitle">Process job costs</div>
+                </div>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('lennar', this)">
+                <div class="icon">🏗️</div>
+                <div class="text">
+                    <div class="title">Lennar Contracts</div>
+                    <div class="subtitle">Process scheduled tasks</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Home Section -->
+            <div id="home-section" class="section">
+                <div class="project-header">
+                    <div class="project-label">WELCOME</div>
+                    <div class="project-title">RCW Processing Suite</div>
+                    <div class="project-subtitle">Automated Excel processing for R.C. Wendt Painting operations</div>
+                </div>
+
+                <!-- Available Tools -->
+                <div class="workflow-section">
+                    <div class="workflow-header">
+                        <span class="workflow-icon">🛠️</span>
+                        <h2 class="workflow-title">Available Processing Tools</h2>
+                    </div>
+
+                    <!-- Gas & Rig Description -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <div class="step-number" style="background: #4a9eff;">⚡</div>
+                            <div class="step-title">Gas & Rig / Hours Worked</div>
+                        </div>
+                        <div class="step-content">
+                            <p class="step-description" style="line-height: 1.8; font-size: 15px;">
+                                The Gas & Rig processor is designed for time and materials jobs where hours need to be tracked and billed.
+                                This tool takes your raw hours worked Excel exports and automatically extracts job numbers from location fields,
+                                aggregates total hours per job, and calculates billing at the standard rate of $0.75 per hour.
+                                The output is a clean, formatted Excel summary with job numbers stored as integers for easy sorting,
+                                dollar amounts properly formatted with currency symbols, and summary totals at the top of the report.
+                                Perfect for weekly billing cycles and job cost analysis, this tool supports both standard format
+                                (job numbers in column B) and RC Wendt format (job numbers in column A), automatically detecting which format is being used.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Lennar Description -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <div class="step-number" style="background: #10b981;">🏗️</div>
+                            <div class="step-title">Lennar Contract Processing</div>
+                        </div>
+                        <div class="step-content">
+                            <p class="step-description" style="line-height: 1.8; font-size: 15px;">
+                                The Lennar processor handles scheduled task exports from Lennar's project management system, transforming
+                                complex task lists into organized summaries by lot and plan. This sophisticated tool automatically
+                                categorizes painting tasks into four main buckets: EXT PRIME (exterior priming), EXTERE (exterior painting),
+                                EXTERIOR UA (exterior touch-ups and finals), and INTERIOR (all interior work). During processing, it applies
+                                intelligent formatting rules such as removing leading zeros and trailing slashes from LOT numbers (e.g., "0044/" becomes "44")
+                                and concatenating Plan with Elevation columns (e.g., Plan "2" + Elevation "B" becomes "2B").
+                                The system uses a YAML-based classification engine to map hundreds of different task descriptions to the appropriate
+                                categories, generates comprehensive QA reports showing any unmapped items for review, and produces a formatted
+                                Excel summary that's ready for submission. This tool supports both .XLS and .XLSX formats, making it compatible
+                                with various Lennar export versions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gas & Rig Section -->
+            <div id="gasrig-section" class="section" style="display: none;">
+                <div class="project-header">
+                    <div class="project-label">PROCESSING TOOL</div>
+                    <div class="project-title">Gas & Rig / Hours Worked</div>
+                    <div class="project-subtitle">Automated job cost calculation and billing summary</div>
+                </div>
+
+                <div class="instructions-card">
+                    <div class="instructions-header">
+                        <div class="instructions-icon">⚡</div>
+                        <div class="instructions-title">About This Tool</div>
+                    </div>
+                    <div class="instructions-content" style="line-height: 1.8; font-size: 15px; margin-bottom: 25px;">
+                        The Gas & Rig processor transforms your raw timesheet data into professional billing summaries.
+                        Simply upload an Excel file containing job location data with 4-digit job numbers, and the system will
+                        automatically extract job codes, aggregate hours by job, and calculate costs at $0.75 per hour.
+                        The output includes properly formatted job numbers as integers, currency-formatted dollar amounts,
+                        and a summary section with grand totals. This tool intelligently detects whether your data uses
+                        standard format or RC Wendt format, ensuring compatibility with various export types.
+                    </div>
+                    <form id="gasrig-form">
+                        <div class="upload-area" onclick="document.getElementById('gasrig-file').click()">
+                            <div class="upload-icon">⚡</div>
+                            <div class="upload-text">Upload Hours Worked Excel</div>
+                            <div class="upload-subtext">Must contain 4-digit job numbers in location field</div>
+                            <input type="file" id="gasrig-file" class="file-input" accept=".xlsx">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">
+                            <span>⚙️</span> Process File
+                        </button>
+                    </form>
+
+                    <div id="gasrig-result" class="result-container"></div>
+                </div>
+            </div>
+
+            <!-- Lennar Section -->
+            <div id="lennar-section" class="section" style="display: none;">
+                <div class="project-header">
+                    <div class="project-label">PROCESSING TOOL</div>
+                    <div class="project-title">Lennar Contract Processing</div>
+                    <div class="project-subtitle">Intelligent task categorization and summary generation</div>
+                </div>
+
+                <div class="instructions-card">
+                    <div class="instructions-header">
+                        <div class="instructions-icon">🏗️</div>
+                        <div class="instructions-title">About This Tool</div>
+                    </div>
+                    <div class="instructions-content" style="line-height: 1.8; font-size: 15px; margin-bottom: 25px;">
+                        The Lennar processor is a sophisticated tool designed specifically for Lennar's scheduled task exports.
+                        It automatically categorizes hundreds of different painting task descriptions into four standard buckets
+                        (EXT PRIME, EXTERE, EXTERIOR UA, and INTERIOR) using an intelligent YAML-based classification system.
+                        The processor applies professional formatting including LOT number cleanup (removing leading zeros and
+                        trailing slashes) and Plan/Elevation concatenation. Each processing run generates a comprehensive QA report
+                        that identifies any unmapped tasks, ensures data integrity, and provides full visibility into the
+                        categorization process. The final output is a clean, formatted Excel file ready for submission.
+                    </div>
+                    <form id="lennar-form">
+                        <div class="upload-area" onclick="document.getElementById('lennar-file').click()">
+                            <div class="upload-icon">🏗️</div>
+                            <div class="upload-text">Upload Lennar Excel Export</div>
+                            <div class="upload-subtext">Must contain Lot/Block, Plan, Task, and Task Start Date columns</div>
+                            <input type="file" id="lennar-file" class="file-input" accept=".xlsx,.xls">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">
+                            <span>⚙️</span> Process File
+                        </button>
+                    </form>
+
+                    <div id="lennar-result" class="result-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Section Management
+        function showSection(sectionName, element) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            const sectionId = sectionName + '-section';
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.style.display = 'block';
+            }
+
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Add active class to clicked element or find it by section name
+            if (element) {
+                element.classList.add('active');
+            } else {
+                // Find the sidebar item for this section
+                const sidebarItems = document.querySelectorAll('.sidebar-item');
+                const sectionIndex = ['home', 'gasrig', 'lennar'].indexOf(sectionName);
+                if (sectionIndex >= 0 && sidebarItems[sectionIndex]) {
+                    sidebarItems[sectionIndex].classList.add('active');
+                }
+            }
+        }
+
+        // Drag and Drop
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect({target: {files: files}});
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                console.log('File selected:', file.name);
+                // Process file based on current section
+            }
+        }
+
+        // Gas & Rig Form Handler
+        document.getElementById('gasrig-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('gasrig-file');
+            const resultDiv = document.getElementById('gasrig-result');
+            const submitBtn = e.target.querySelector('.btn-primary');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/v1/gas-rig/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Processing failed');
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon success">✓</div>
+                        <div class="result-title">Processing Complete!</div>
+                    </div>
+                    <div class="result-details">
+                        <p>✓ Job costs calculated at $0.75/hour</p>
+                        <p>✓ Summary generated with totals</p>
+                        <a href="${url}" download="gas_rig_summary.xlsx" class="btn btn-primary" style="margin-top: 15px;">
+                            <span>📊</span> Download Results
+                        </a>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-success');
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon error">✕</div>
+                        <div class="result-title">Processing Failed</div>
+                    </div>
+                    <div class="result-details">
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>⚙️</span> Process File';
+            }
+        });
+
+        // Lennar Form Handler
+        document.getElementById('lennar-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('lennar-file');
+            const resultDiv = document.getElementById('lennar-result');
+            const submitBtn = e.target.querySelector('.btn-primary');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                // Upload file
+                const uploadResponse = await fetch('/api/v1/uploads', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const uploadData = await uploadResponse.json();
+                const jobId = uploadData.job_id;
+
+                // Poll for completion (with max attempts to prevent infinite loop)
+                let jobComplete = false;
+                let pollAttempts = 0;
+                const maxPollAttempts = 60; // Maximum 60 seconds of polling
+
+                while (!jobComplete && pollAttempts < maxPollAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    pollAttempts++;
+
+                    const jobResponse = await fetch(`/api/v1/jobs/${jobId}`);
+                    const jobData = await jobResponse.json();
+
+                    // Update progress message
+                    if (jobData.status === 'running') {
+                        resultDiv.innerHTML = `
+                            <div class="processing-message">
+                                <div class="spinner-border spinner-border-sm"></div>
+                                Processing... ${jobData.message || ''} (${Math.round((jobData.progress || 0) * 100)}%)
+                            </div>
+                        `;
+                    }
+
+                    if (jobData.status === 'succeeded' || jobData.status === 'failed') {
+                        jobComplete = true;
+
+                        if (jobData.status === 'succeeded') {
+                            resultDiv.innerHTML = `
+                                <div class="result-header">
+                                    <div class="result-icon success">✓</div>
+                                    <div class="result-title">Processing Complete!</div>
+                                </div>
+                                <div class="result-details">
+                                    <p>✓ Rows parsed: ${jobData.result?.qa_report?.parse_meta?.rows_parsed || 0}</p>
+                                    <p>✓ Summary rows: ${jobData.result?.qa_report?.summary_rows_generated || 0}</p>
+                                    <a href="/api/v1/jobs/${jobId}/download" class="btn btn-primary" style="margin-top: 15px;">
+                                        <span>📊</span> Download Results
+                                    </a>
+                                </div>
+                            `;
+                            resultDiv.classList.add('show', 'result-success');
+                        } else if (jobData.status === 'failed') {
+                            resultDiv.innerHTML = `
+                                <div class="result-header">
+                                    <div class="result-icon error">✕</div>
+                                    <div class="result-title">Processing Failed</div>
+                                </div>
+                                <div class="result-details">
+                                    <p>${jobData.message || 'An error occurred during processing'}</p>
+                                </div>
+                            `;
+                            resultDiv.classList.add('show', 'result-error');
+                        }
+                    }
+                }
+
+                // Handle timeout
+                if (!jobComplete) {
+                    resultDiv.innerHTML = `
+                        <div class="result-header">
+                            <div class="result-icon error">⏱</div>
+                            <div class="result-title">Processing Timeout</div>
+                        </div>
+                        <div class="result-details">
+                            <p>The processing is taking longer than expected. Please try again or check the server logs.</p>
+                        </div>
+                    `;
+                    resultDiv.classList.add('show', 'result-error');
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon error">✕</div>
+                        <div class="result-title">Processing Failed</div>
+                    </div>
+                    <div class="result-details">
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>⚙️</span> Process File';
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.metaKey || e.ctrlKey) {
+                const num = parseInt(e.key);
+                if (num >= 1 && num <= 3) {
+                    e.preventDefault();
+                    const sections = ['home', 'gasrig', 'lennar'];
+                    const section = sections[num - 1];
+                    if (section) {
+                        showSection(section);
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

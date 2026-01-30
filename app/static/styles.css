@@ -1,0 +1,126 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f6f7fb;
+}
+.container {
+  max-width: 780px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+h1 {
+  margin-bottom: 12px;
+}
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+.warning {
+  background: #fff3cd;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 12px 0 18px;
+  border: 1px solid #ffe69c;
+}
+.error {
+  background: #f8d7da;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 12px 0 18px;
+  border: 1px solid #f1aeb5;
+}
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+button {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.hint {
+  color: #555;
+  margin-top: 10px;
+}
+.download {
+  display: inline-block;
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: #1f6feb;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+th,
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+th {
+  background: #fafafa;
+}
+.summary-box {
+  background: #e8f5e9;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  border: 2px solid #4caf50;
+}
+.summary-box h2 {
+  margin-top: 0;
+  color: #2e7d32;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  font-size: 18px;
+}
+.summary-label {
+  font-weight: 600;
+  color: #1b5e20;
+}
+.summary-value {
+  font-weight: 700;
+  color: #2e7d32;
+  font-size: 20px;
+}
+
+.example {
+  margin-top: 28px;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.example-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.example-image {
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.example-hint {
+  margin-top: 10px;
+  color: #555;
+  font-size: 0.9em;
+}

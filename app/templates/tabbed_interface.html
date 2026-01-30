@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCW Processing Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f7f7f7;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 18px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            background: #efefef;
+            color: #333;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .upload-card {
+            background: #f9f9f9;
+            border: 2px dashed #d0d0d0;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .upload-card:hover {
+            border-color: #667eea;
+            background: #f5f5ff;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 500;
+        }
+
+        .file-input-label:hover {
+            background: #5567d8;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .submit-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feature-list {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-list h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .feature-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+            color: #666;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            color: #1565C0;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            color: #e65100;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            color: #1B5E20;
+        }
+
+        .spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0f4f8;
+            border-radius: 8px;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .download-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .download-link:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>RCW Processing Tools</h1>
+            <p style="margin-top: 10px; opacity: 0.9;">Excel Processing & Reporting Suite</p>
+            <div style="margin-top: 15px;">
+                <a href="/" style="color: white; text-decoration: none; padding: 8px 16px; background: rgba(255,255,255,0.2); border-radius: 6px; display: inline-block; font-size: 14px;">
+                    ← Switch to Professional View
+                </a>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('hoursWorked')">
+                Hours Worked / Gas & Rig
+            </button>
+            <button class="tab-button" onclick="showTab('lennar')">
+                Lennar Contract Processing
+            </button>
+        </div>
+
+        <!-- Hours Worked Tab -->
+        <div id="hoursWorked" class="tab-content active">
+            <h2 style="margin-bottom: 20px; color: #333;">Gas & Rig Job Cost Analysis</h2>
+
+            <div class="alert alert-info">
+                <strong>Required Format:</strong> Upload an Excel file (.XLSX) with job numbers and hours worked.
+            </div>
+
+            <form id="hoursWorkedForm" class="upload-form">
+                <div class="upload-card">
+                    <h3 style="margin-bottom: 15px; color: #555;">Upload Excel File</h3>
+                    <p style="color: #888; margin-bottom: 20px;">Location must start with a 4-digit job number</p>
+
+                    <div class="file-input-wrapper">
+                        <input type="file" id="hoursFile" accept=".xlsx" onchange="updateFileName('hoursFile', 'hoursFileName')">
+                        <label for="hoursFile" class="file-input-label">Choose File</label>
+                    </div>
+                    <div id="hoursFileName" class="file-name">No file selected</div>
+                </div>
+
+                <button type="submit" class="submit-button">Generate Report</button>
+            </form>
+
+            <div class="feature-list">
+                <h3>Output Includes:</h3>
+                <ul>
+                    <li>Job Number extraction from location field</li>
+                    <li>Total hours per job</li>
+                    <li>Dollar calculation at $0.75/hour</li>
+                    <li>Summary Excel report</li>
+                </ul>
+            </div>
+
+            <div id="hoursResult" class="result-container"></div>
+        </div>
+
+        <!-- Lennar Tab -->
+        <div id="lennar" class="tab-content">
+            <h2 style="margin-bottom: 20px; color: #333;">Lennar Scheduled Tasks Processor</h2>
+
+            <div class="alert alert-warning">
+                <strong>Supported Formats:</strong> Both .XLS and .XLSX files are accepted
+            </div>
+
+            <form id="lennarForm" class="upload-form">
+                <div class="upload-card">
+                    <h3 style="margin-bottom: 15px; color: #555;">Upload Lennar Export</h3>
+                    <p style="color: #888; margin-bottom: 20px;">Must contain: Lot/Block, Plan, Elevation, Task, and Task Start Date columns</p>
+
+                    <div class="file-input-wrapper">
+                        <input type="file" id="lennarFile" accept=".xls,.xlsx" onchange="updateFileName('lennarFile', 'lennarFileName')">
+                        <label for="lennarFile" class="file-input-label">Choose File</label>
+                    </div>
+                    <div id="lennarFileName" class="file-name">No file selected</div>
+                </div>
+
+                <button type="submit" class="submit-button">Process File</button>
+            </form>
+
+            <div class="feature-list">
+                <h3>Processing Features:</h3>
+                <ul>
+                    <li>Automatic task classification (EXT PRIME, EXTERE, EXTERIOR UA, INTERIOR)</li>
+                    <li>LOT number formatting (removes leading zeros and trailing slashes)</li>
+                    <li>Plan + Elevation concatenation (e.g., Plan 2 + Elevation B = 2B)</li>
+                    <li>Summary by Lot/Plan with cost totals</li>
+                    <li>QA report with unmapped tasks and data validation</li>
+                </ul>
+            </div>
+
+            <div id="lennarResult" class="result-container"></div>
+            <div id="spinner" class="spinner"></div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => button.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        function updateFileName(inputId, displayId) {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+
+            if (input.files.length > 0) {
+                const fileName = input.files[0].name;
+                const fileSize = (input.files[0].size / 1024).toFixed(2);
+                display.textContent = `${fileName} (${fileSize} KB)`;
+                display.style.color = '#4CAF50';
+            } else {
+                display.textContent = 'No file selected';
+                display.style.color = '#666';
+            }
+        }
+
+        // Hours Worked Form Handler
+        document.getElementById('hoursWorkedForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('hoursFile');
+            const resultDiv = document.getElementById('hoursResult');
+            const submitButton = e.target.querySelector('.submit-button');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+
+            // Disable button during processing
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processing...';
+            resultDiv.classList.remove('show');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                // Process file directly (synchronous endpoint)
+                const response = await fetch('http://localhost:8001/api/v1/gas-rig/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `Processing failed: ${response.statusText}`);
+                }
+
+                // Create download link from response
+                const blob = await response.blob();
+                const downloadUrl = URL.createObjectURL(blob);
+                const fileName = response.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] || 'gas_rig_summary.xlsx';
+
+                // Display results
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>Processing Complete!</strong>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <h4>Summary Generated:</h4>
+                        <p>• Job costs calculated at $0.75 per hour</p>
+                        <p>• Output includes JobNumber, Hours, and Dollars columns</p>
+                        <p>• Summary totals included at the top of the file</p>
+                    </div>
+                    <a href="${downloadUrl}"
+                       download="${fileName}"
+                       class="download-link">
+                        Download Excel Report
+                    </a>
+                `;
+
+                resultDiv.classList.add('show');
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <strong>Error:</strong> ${error.message}
+                        <p style="margin-top: 10px; font-size: 14px;">
+                            Make sure the Excel file contains location data with 4-digit job numbers.
+                        </p>
+                    </div>
+                `;
+                resultDiv.classList.add('show');
+            } finally {
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Generate Report';
+            }
+        });
+
+        // Lennar Form Handler
+        document.getElementById('lennarForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('lennarFile');
+            const resultDiv = document.getElementById('lennarResult');
+            const spinner = document.getElementById('spinner');
+            const submitButton = e.target.querySelector('.submit-button');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+
+            // Show spinner and disable button
+            spinner.style.display = 'block';
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processing...';
+            resultDiv.classList.remove('show');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                // Upload file
+                const uploadResponse = await fetch('http://localhost:8001/api/v1/uploads', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+                }
+
+                const uploadData = await uploadResponse.json();
+                const jobId = uploadData.job_id;
+
+                // Poll for job completion
+                let jobComplete = false;
+                let jobData = null;
+
+                while (!jobComplete) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+
+                    const jobResponse = await fetch(`http://localhost:8001/api/v1/jobs/${jobId}`);
+                    jobData = await jobResponse.json();
+
+                    if (jobData.status === 'completed' || jobData.status === 'failed') {
+                        jobComplete = true;
+                    }
+                }
+
+                // Display results
+                if (jobData.status === 'completed') {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>Processing Complete!</strong>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <h4>Summary:</h4>
+                            <p>• Rows parsed: ${jobData.result?.qa_report?.parse_meta?.rows_parsed || 0}</p>
+                            <p>• Summary rows generated: ${jobData.result?.summary_rows?.length || 0}</p>
+                            <p>• Total rows seen: ${jobData.result?.qa_report?.parse_meta?.total_rows_seen || 0}</p>
+                        </div>
+                        <a href="http://localhost:8001/api/v1/jobs/${jobId}/download"
+                           class="download-link"
+                           download="summary.xlsx">
+                            Download Excel Report
+                        </a>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <strong>Processing failed:</strong> ${jobData.error || 'Unknown error'}
+                        </div>
+                    `;
+                }
+
+                resultDiv.classList.add('show');
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+                resultDiv.classList.add('show');
+            } finally {
+                // Hide spinner and reset button
+                spinner.style.display = 'none';
+                submitButton.disabled = false;
+                submitButton.textContent = 'Process File';
+            }
+        });
+    </script>
+</body>
+</html>
