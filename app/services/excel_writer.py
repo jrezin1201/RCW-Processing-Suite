@@ -53,10 +53,10 @@ def write_summary_excel(
         bottom=Side(style="thin")
     )
 
-    # Write title row (placeholders) - shifted one column to the right
-    ws["B1"] = f"Project Name: {project_name if project_name else ''}"
-    ws["G1"] = f"Phase: {phase if phase else ''}"  # Moved from D1 to G1
-    ws["I1"] = "Job #:"  # Moved from F1 to I1
+    # Write title row - display just the extracted values
+    ws["B1"] = f"Project Name: {project_name if project_name else ''}"  # Keep label for clarity
+    ws["G1"] = f"Phase: {phase if phase else ''}"  # Keep label with phase number
+    ws["I1"] = "Job #:"  # Job number field
     ws["H1"] = house_string if house_string else ""  # House string in column H, row 1
 
     # Merge cells B1 and C1 for Project Name
@@ -122,6 +122,12 @@ def write_summary_excel(
     # Add total row
     total_row = data_start_row + len(summary_rows)
 
+    # Apply yellow fill to all cells in Total column (K) including empty rows
+    # Fill from header to a few rows past the data to match the image format
+    for row in range(header_row, max(total_row + 2, 14)):  # Ensure we go to at least row 13 and beyond
+        cell = ws.cell(row=row, column=11)  # Column K is column 11
+        cell.fill = yellow_fill
+
     # Create larger font for total row
     total_font = Font(bold=True, size=16)
 
@@ -142,7 +148,7 @@ def write_summary_excel(
     cell.number_format = accounting_format
     cell.font = total_font
     # No border applied
-    cell.fill = yellow_fill
+    cell.fill = yellow_fill  # Apply yellow fill to total cell
 
     # Add Labor calculations (absolute rows 16 and 18)
     labor_row_1 = 16
@@ -232,8 +238,8 @@ def write_summary_excel(
     qa_ws = wb.create_sheet(title="QA Report")
     write_qa_sheet(qa_ws, qa_report)
 
-    # Save the file with contracts-forms prefix
-    output_path = output_dir / f"contracts-forms_{job_id}.xlsx"
+    # Save the file with contracts_forms prefix
+    output_path = output_dir / f"contracts_forms_{job_id}.xlsx"
     wb.save(output_path)
     wb.close()
 

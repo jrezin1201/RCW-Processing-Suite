@@ -115,7 +115,7 @@ async def download_result(job_id: str):
 
     return FileResponse(
         path=output_path,
-        filename=f"lennar_summary_{job_id}.xlsx",
+        filename=f"contracts_forms_{job_id}.xlsx",
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
