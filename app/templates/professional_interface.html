@@ -649,7 +649,7 @@
                 <div class="project-header">
                     <div class="project-label">WELCOME</div>
                     <div class="project-title">RCW Processing Suite</div>
-                    <div class="project-subtitle">Automated Excel processing for R.C. Wendt Painting operations</div>
+                    <div class="project-subtitle">Professional billing and task management for construction projects</div>
                 </div>
 
                 <!-- Available Tools -->
@@ -667,13 +667,9 @@
                         </div>
                         <div class="step-content">
                             <p class="step-description" style="line-height: 1.8; font-size: 15px;">
-                                The Gas & Rig processor is designed for time and materials jobs where hours need to be tracked and billed.
-                                This tool takes your raw hours worked Excel exports and automatically extracts job numbers from location fields,
-                                aggregates total hours per job, and calculates billing at the standard rate of $0.75 per hour.
-                                The output is a clean, formatted Excel summary with job numbers stored as integers for easy sorting,
-                                dollar amounts properly formatted with currency symbols, and summary totals at the top of the report.
-                                Perfect for weekly billing cycles and job cost analysis, this tool supports both standard format
-                                (job numbers in column B) and RC Wendt format (job numbers in column A), automatically detecting which format is being used.
+                                Processes time and materials job data from Excel exports. Automatically extracts 4-digit job numbers from location fields,
+                                aggregates total hours per job, and calculates billing at $0.75 per hour. Outputs a formatted Excel summary with
+                                properly sorted job numbers and currency-formatted totals. Supports both standard and RC Wendt data formats.
                             </p>
                         </div>
                     </div>
@@ -686,16 +682,11 @@
                         </div>
                         <div class="step-content">
                             <p class="step-description" style="line-height: 1.8; font-size: 15px;">
-                                The Lennar processor handles scheduled task exports from Lennar's project management system, transforming
-                                complex task lists into organized summaries by lot and plan. This sophisticated tool automatically
-                                categorizes painting tasks into four main buckets: EXT PRIME (exterior priming), EXTERE (exterior painting),
-                                EXTERIOR UA (exterior touch-ups and finals), and INTERIOR (all interior work). During processing, it applies
-                                intelligent formatting rules such as removing leading zeros and trailing slashes from LOT numbers (e.g., "0044/" becomes "44")
-                                and concatenating Plan with Elevation columns (e.g., Plan "2" + Elevation "B" becomes "2B").
-                                The system uses a YAML-based classification engine to map hundreds of different task descriptions to the appropriate
-                                categories, generates comprehensive QA reports showing any unmapped items for review, and produces a formatted
-                                Excel summary that's ready for submission. This tool supports both .XLS and .XLSX formats, making it compatible
-                                with various Lennar export versions.
+                                Transforms construction project task lists into formatted billing summaries. Automatically extracts project name,
+                                phase, and house string from input files. Categorizes tasks into EXT PRIME, EXTERIOR, EXTERIOR UA, and INTERIOR buckets.
+                                Formats lot numbers, combines plan/elevation codes, and generates professional Excel outputs with project metadata,
+                                totals by lot/plan, and automatic labor (43%) and material (28%) calculations. Includes comprehensive QA reporting
+                                for unmapped tasks. Supports both .XLS and .XLSX formats.
                             </p>
                         </div>
                     </div>
@@ -716,13 +707,23 @@
                         <div class="instructions-title">About This Tool</div>
                     </div>
                     <div class="instructions-content" style="line-height: 1.8; font-size: 15px; margin-bottom: 25px;">
-                        The Gas & Rig processor transforms your raw timesheet data into professional billing summaries.
-                        Simply upload an Excel file containing job location data with 4-digit job numbers, and the system will
-                        automatically extract job codes, aggregate hours by job, and calculate costs at $0.75 per hour.
-                        The output includes properly formatted job numbers as integers, currency-formatted dollar amounts,
-                        and a summary section with grand totals. This tool intelligently detects whether your data uses
-                        standard format or RC Wendt format, ensuring compatibility with various export types.
+                        Upload an Excel file with location data containing 4-digit job numbers. The system automatically extracts job codes,
+                        sums hours by job, and calculates costs at $0.75 per hour. Output includes formatted job numbers, currency-styled
+                        dollar amounts, and summary totals. Compatible with both standard and RC Wendt export formats.
                     </div>
+
+                    <!-- Example Format Section -->
+                    <div class="example-section" style="margin: 25px 0;">
+                        <h3 style="color: #e4e6eb; font-size: 16px; font-weight: 600; margin-bottom: 15px;">
+                            Make sure input document looks like this
+                        </h3>
+                        <div style="background: #24272e; padding: 20px; border-radius: 8px; border: 1px solid #3a3f4b;">
+                            <img src="/static/hours_worked_ex_format.png"
+                                 alt="Hours Worked Example Format"
+                                 style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                        </div>
+                    </div>
+
                     <form id="gasrig-form">
                         <div class="upload-area" onclick="document.getElementById('gasrig-file').click()">
                             <div class="upload-icon">⚡</div>
@@ -754,18 +755,28 @@
                         <div class="instructions-title">About This Tool</div>
                     </div>
                     <div class="instructions-content" style="line-height: 1.8; font-size: 15px; margin-bottom: 25px;">
-                        The Lennar processor is a sophisticated tool designed specifically for Lennar's scheduled task exports.
-                        It automatically categorizes hundreds of different painting task descriptions into four standard buckets
-                        (EXT PRIME, EXTERE, EXTERIOR UA, and INTERIOR) using an intelligent YAML-based classification system.
-                        The processor applies professional formatting including LOT number cleanup (removing leading zeros and
-                        trailing slashes) and Plan/Elevation concatenation. Each processing run generates a comprehensive QA report
-                        that identifies any unmapped tasks, ensures data integrity, and provides full visibility into the
-                        categorization process. The final output is a clean, formatted Excel file ready for submission.
+                        Upload construction task export files (.XLS or .XLSX). The system extracts project metadata (name, phase, house string),
+                        categorizes tasks into standard painting buckets, and generates formatted Excel summaries with automatic labor/material
+                        calculations. Includes LOT formatting, Plan/Elevation concatenation, and comprehensive QA reporting for unmapped tasks.
+                        Output ready for billing submission with all project details properly displayed.
                     </div>
+
+                    <!-- Example Format Section -->
+                    <div class="example-section" style="margin: 25px 0;">
+                        <h3 style="color: #e4e6eb; font-size: 16px; font-weight: 600; margin-bottom: 15px;">
+                            Make sure input document looks like this
+                        </h3>
+                        <div style="background: #24272e; padding: 20px; border-radius: 8px; border: 1px solid #3a3f4b;">
+                            <img src="/static/contracts_ex_format.png"
+                                 alt="Contracts-Forms Example Format"
+                                 style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                        </div>
+                    </div>
+
                     <form id="lennar-form">
                         <div class="upload-area" onclick="document.getElementById('lennar-file').click()">
                             <div class="upload-icon">🏗️</div>
-                            <div class="upload-text">Upload Lennar Excel Export</div>
+                            <div class="upload-text">Upload Construction Task Export</div>
                             <div class="upload-subtext">Must contain Lot/Block, Plan, Task, and Task Start Date columns</div>
                             <input type="file" id="lennar-file" class="file-input" accept=".xlsx,.xls">
                         </div>

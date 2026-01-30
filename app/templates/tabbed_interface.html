@@ -261,7 +261,7 @@
     <div class="main-container">
         <div class="header">
             <h1>RCW Processing Tools</h1>
-            <p style="margin-top: 10px; opacity: 0.9;">Excel Processing & Reporting Suite</p>
+            <p style="margin-top: 10px; opacity: 0.9;">Professional Billing & Task Management</p>
             <div style="margin-top: 15px;">
                 <a href="/" style="color: white; text-decoration: none; padding: 8px 16px; background: rgba(255,255,255,0.2); border-radius: 6px; display: inline-block; font-size: 14px;">
                     ← Switch to Professional View
@@ -283,7 +283,19 @@
             <h2 style="margin-bottom: 20px; color: #333;">Gas & Rig Job Cost Analysis</h2>
 
             <div class="alert alert-info">
-                <strong>Required Format:</strong> Upload an Excel file (.XLSX) with job numbers and hours worked.
+                <strong>Required Format:</strong> Upload an Excel file (.XLSX) with locations containing 4-digit job numbers and hours worked.
+            </div>
+
+            <!-- Example Format Section -->
+            <div style="margin: 25px 0;">
+                <h3 style="color: #333; font-size: 18px; font-weight: 600; margin-bottom: 15px;">
+                    Make sure input document looks like this
+                </h3>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
+                    <img src="/static/hours_worked_ex_format.png"
+                         alt="Hours Worked Example Format"
+                         style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>
             </div>
 
             <form id="hoursWorkedForm" class="upload-form">
@@ -304,10 +316,10 @@
             <div class="feature-list">
                 <h3>Output Includes:</h3>
                 <ul>
-                    <li>Job Number extraction from location field</li>
-                    <li>Total hours per job</li>
-                    <li>Dollar calculation at $0.75/hour</li>
-                    <li>Summary Excel report</li>
+                    <li>Automatic 4-digit job number extraction from location fields</li>
+                    <li>Aggregated hours per job with proper sorting</li>
+                    <li>Cost calculation at $0.75/hour with currency formatting</li>
+                    <li>Professional Excel summary with totals</li>
                 </ul>
             </div>
 
@@ -316,15 +328,27 @@
 
         <!-- Lennar Tab -->
         <div id="lennar" class="tab-content">
-            <h2 style="margin-bottom: 20px; color: #333;">Lennar Scheduled Tasks Processor</h2>
+            <h2 style="margin-bottom: 20px; color: #333;">Contracts-Forms Task Processor</h2>
 
             <div class="alert alert-warning">
                 <strong>Supported Formats:</strong> Both .XLS and .XLSX files are accepted
             </div>
 
+            <!-- Example Format Section -->
+            <div style="margin: 25px 0;">
+                <h3 style="color: #333; font-size: 18px; font-weight: 600; margin-bottom: 15px;">
+                    Make sure input document looks like this
+                </h3>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
+                    <img src="/static/contracts_ex_format.png"
+                         alt="Contracts-Forms Example Format"
+                         style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>
+            </div>
+
             <form id="lennarForm" class="upload-form">
                 <div class="upload-card">
-                    <h3 style="margin-bottom: 15px; color: #555;">Upload Lennar Export</h3>
+                    <h3 style="margin-bottom: 15px; color: #555;">Upload Construction Task Export</h3>
                     <p style="color: #888; margin-bottom: 20px;">Must contain: Lot/Block, Plan, Elevation, Task, and Task Start Date columns</p>
 
                     <div class="file-input-wrapper">
@@ -340,11 +364,11 @@
             <div class="feature-list">
                 <h3>Processing Features:</h3>
                 <ul>
-                    <li>Automatic task classification (EXT PRIME, EXTERE, EXTERIOR UA, INTERIOR)</li>
-                    <li>LOT number formatting (removes leading zeros and trailing slashes)</li>
-                    <li>Plan + Elevation concatenation (e.g., Plan 2 + Elevation B = 2B)</li>
-                    <li>Summary by Lot/Plan with cost totals</li>
-                    <li>QA report with unmapped tasks and data validation</li>
+                    <li>Extracts project name, phase number, and house string from input</li>
+                    <li>Categorizes tasks into EXT PRIME, EXTERIOR, EXTERIOR UA, INTERIOR</li>
+                    <li>Formats LOT numbers and combines Plan + Elevation codes</li>
+                    <li>Calculates labor (43%) and material (28%) costs automatically</li>
+                    <li>Generates formatted Excel with totals and comprehensive QA report</li>
                 </ul>
             </div>
 
