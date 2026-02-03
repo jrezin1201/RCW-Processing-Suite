@@ -10,6 +10,33 @@ from app.models.schemas import ParsedRow, QAMeta
 logger = logging.getLogger(__name__)
 
 
+def extract_painting_task(task_value: str) -> Optional[str]:
+    """
+    Extract the normalized task name from a Painting task string.
+
+    Extracts text after "Painting -" and before the first "(".
+
+    Examples:
+        "Painting - Base Shoe (Flooring Orders)..." -> "Base Shoe"
+        "Painting - Kitchen, Bath & Lids (INT)..." -> "Kitchen, Bath & Lids"
+        "Painting - Exterior / Prep & Enamel (437205)..." -> "Exterior / Prep & Enamel"
+
+    Args:
+        task_value: The raw task cell value
+
+    Returns:
+        Extracted task name, or None if format doesn't match
+    """
+    if not task_value:
+        return None
+
+    match = re.search(r"Painting\s*-\s*([^(]+)", task_value)
+    if not match:
+        return None
+
+    return match.group(1).strip()
+
+
 def extract_project_name_from_b3(ws) -> Optional[str]:
     """
     Extract project name from cell B3 or B2 (between first and second hyphen).
@@ -540,13 +567,20 @@ def parse_row(row: tuple, column_map: Dict[str, int]) -> ParsedRow:
 
         return None
 
+    # Extract and normalize task text
+    raw_task = str(get_value("task_text")).strip() if get_value("task_text") else None
+    normalized_task = extract_painting_task(raw_task) if raw_task else None
+    # Fall back to raw task if extraction doesn't match expected format
+    task_text = normalized_task if normalized_task else raw_task
+
     return ParsedRow(
         lot_block=str(get_value("lot_block")).strip() if get_value("lot_block") else None,
         plan=str(get_value("plan")).strip() if get_value("plan") else None,
         elevation=str(get_value("elevation")).strip() if get_value("elevation") else None,
         swing=str(get_value("swing")).strip() if get_value("swing") else None,
         task_start_date=parse_date(get_value("task_start_date")),
-        task_text=str(get_value("task_text")).strip() if get_value("task_text") else None,
+        task_text=task_text,
+        task_text_raw=raw_task,
         subtotal=parse_money(get_value("subtotal")),
         tax=parse_money(get_value("tax")),
         total=parse_money(get_value("total"))
