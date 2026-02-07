@@ -59,9 +59,12 @@ class SummaryRow(BaseModel):
     lot_block: str = Field(..., description="Lot/Block identifier")
     plan: str = Field(..., description="Plan identifier")
     ext_prime: float = Field(0.0, description="EXT PRIME total")
-    extere: float = Field(0.0, description="EXTERE total")
+    exterior: float = Field(0.0, description="EXTERIOR total")
     exterior_ua: float = Field(0.0, description="EXTERIOR UA total")
     interior: float = Field(0.0, description="INTERIOR total")
+    roll_walls_final: float = Field(0.0, description="ROLL WALLS FINAL total")
+    touch_up: float = Field(0.0, description="TOUCH UP total")
+    q4_reversal: float = Field(0.0, description="Q4 REVERSAL total")
     total: float = Field(0.0, description="Total amount")
 
 

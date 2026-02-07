@@ -1,0 +1,59 @@
+# Classification Configuration
+# This file controls how tasks are classified into categories.
+# Modify keywords here without changing code.
+
+# Keywords for identifying "prime/prep" work
+prime_keywords:
+  - PRIME
+  - PRIMER
+  - UNDERCOAT
+  - SEAL
+  - SEALER
+  - SAND
+  - SANDING
+  - BLOCK
+  - BLOCKOUT
+  - CAULK
+  - PATCH
+  - PREP
+  - FASCIA
+
+# Keywords for identifying touch-up work
+touchup_keywords:
+  - TOUCH UP
+  - TOUCHUP
+  - TOUCH-UP
+  - PUNCH
+  - FINAL TOUCH
+  - AFTER CARPET
+
+# Keywords for identifying roll walls work
+rollwalls_keywords:
+  - ROLL WALL
+  - ROLL WALLS
+  - ROLLED WALL
+  - ROLLED WALLS
+  - ROLLING WALL
+  - ROLLING WALLS
+  - WALL ROLL
+  - WALLS ROLL
+  - CEILING
+  - CEILINGS
+
+# Q4 Reversal configuration
+q4_reversal:
+  enabled: false  # Set to true when Q4 reversal rule is ready
+  months: [10, 11, 12]  # October, November, December
+  # Optional regex pattern to match Q4 reversal markers in task text
+  # marker_regex: "Q4|REVERSAL|ACCRUAL"
+
+# Category definitions (for reference/documentation)
+categories:
+  - EXT PRIME
+  - EXTERIOR
+  - EXTERIOR UA
+  - INTERIOR
+  - ROLL WALLS FINAL
+  - TOUCH UP
+  - Q4 REVERSAL
+  - UNMAPPED

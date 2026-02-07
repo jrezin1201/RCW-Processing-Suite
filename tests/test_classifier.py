@@ -2,11 +2,16 @@
 import pytest
 from datetime import datetime
 from app.models.schemas import ParsedRow
-from app.services.classifier import classify_row, matches_rule
+from app.services.classifier import classify_row, reload_config
 
 
 class TestTaskClassification:
     """Test suite for task classification."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        """Reload config before each test."""
+        reload_config()
 
     def test_ext_prime_classification(self):
         """Test that exterior prime tasks are classified correctly."""
@@ -65,7 +70,7 @@ class TestTaskClassification:
         )
         assert classify_row(row2) == "INTERIOR"
 
-    def test_extere_classification(self):
+    def test_exterior_classification(self):
         """Test that general exterior tasks are classified correctly."""
         row = ParsedRow(
             lot_block="401",
@@ -73,7 +78,8 @@ class TestTaskClassification:
             task_text="Painting - Exterior",
             total=1000.0
         )
-        assert classify_row(row) == "EXTERE"
+        # Now uses "EXTERIOR" instead of "EXTERE"
+        assert classify_row(row) == "EXTERIOR"
 
         # Exterior but not prime or UA
         row2 = ParsedRow(
@@ -82,7 +88,7 @@ class TestTaskClassification:
             task_text="Exterior General Coating",
             total=1100.0
         )
-        assert classify_row(row2) == "EXTERE"
+        assert classify_row(row2) == "EXTERIOR"
 
     def test_unmapped_classification(self):
         """Test that unmappable tasks are classified as UNMAPPED."""
@@ -176,18 +182,18 @@ class TestTaskClassification:
         )
         assert classify_row(row3) == "INTERIOR"
 
-        # Painting ext (general)
+        # Painting ext (general) - now returns "EXTERIOR" instead of "EXTERE"
         row4 = ParsedRow(
             lot_block="804",
             plan="S",
             task_text="Painting Ext Finish",
             total=1900.0
         )
-        assert classify_row(row4) == "EXTERE"
+        assert classify_row(row4) == "EXTERIOR"
 
     def test_rule_priority(self):
         """Test that rules are applied in the correct priority order."""
-        # Should match EXT PRIME before EXTERE (more specific rule first)
+        # Should match EXT PRIME before EXTERIOR (more specific rule first)
         row = ParsedRow(
             lot_block="901",
             plan="T",
@@ -196,7 +202,7 @@ class TestTaskClassification:
         )
         assert classify_row(row) == "EXT PRIME"
 
-        # Should match EXTERIOR UA before EXTERE
+        # Should match EXTERIOR UA before EXTERIOR
         row2 = ParsedRow(
             lot_block="902",
             plan="U",
@@ -205,56 +211,33 @@ class TestTaskClassification:
         )
         assert classify_row(row2) == "EXTERIOR UA"
 
+    def test_touch_up_classification(self):
+        """Test that touch-up tasks are classified correctly."""
+        row = ParsedRow(
+            lot_block="1001",
+            plan="V",
+            task_text="Painting - Touch Up (INT)",
+            total=500.0
+        )
+        assert classify_row(row) == "TOUCH UP"
 
-class TestMatchesRule:
-    """Test suite for the rule matching logic."""
+        row2 = ParsedRow(
+            lot_block="1002",
+            plan="W",
+            task_text="After Carpet Touch-Up",
+            total=600.0
+        )
+        assert classify_row(row2) == "TOUCH UP"
 
-    def test_all_contains(self):
-        """Test all_contains rule matching."""
-        rule = {
-            "bucket": "TEST",
-            "all_contains": ["exterior", "prime"]
-        }
-        assert matches_rule("exterior prime coating", rule) == True
-        assert matches_rule("prime exterior work", rule) == True
-        assert matches_rule("exterior work", rule) == False  # Missing "prime"
-        assert matches_rule("prime coating", rule) == False  # Missing "exterior"
-
-    def test_any_contains(self):
-        """Test any_contains rule matching."""
-        rule = {
-            "bucket": "TEST",
-            "any_contains": ["interior", "inside"]
-        }
-        assert matches_rule("interior walls", rule) == True
-        assert matches_rule("inside painting", rule) == True
-        assert matches_rule("interior inside work", rule) == True
-        assert matches_rule("exterior walls", rule) == False
-
-    def test_none_contains(self):
-        """Test none_contains rule matching."""
-        rule = {
-            "bucket": "TEST",
-            "all_contains": ["exterior"],
-            "none_contains": ["prime", "ua"]
-        }
-        assert matches_rule("exterior coating", rule) == True
-        assert matches_rule("exterior prime", rule) == False  # Contains "prime"
-        assert matches_rule("exterior ua work", rule) == False  # Contains "ua"
-
-    def test_combined_rules(self):
-        """Test combinations of rule types."""
-        rule = {
-            "bucket": "TEST",
-            "all_contains": ["painting", "exterior"],
-            "none_contains": ["prime", "[ua]"],
-            "any_contains": ["coat", "finish", "application"]
-        }
-        assert matches_rule("painting exterior coat", rule) == True
-        assert matches_rule("painting exterior finish", rule) == True
-        assert matches_rule("painting exterior", rule) == False  # Missing any_contains
-        assert matches_rule("painting exterior prime coat", rule) == False  # Contains "prime"
-        assert matches_rule("painting interior coat", rule) == False  # Missing "exterior"
+    def test_roll_walls_classification(self):
+        """Test that roll walls tasks are classified correctly."""
+        row = ParsedRow(
+            lot_block="1101",
+            plan="X",
+            task_text="Painting - Roll Walls (INT)",
+            total=800.0
+        )
+        assert classify_row(row) == "ROLL WALLS FINAL"
 
 
 if __name__ == "__main__":

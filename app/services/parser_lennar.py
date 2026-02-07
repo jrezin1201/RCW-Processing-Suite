@@ -338,7 +338,7 @@ def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Op
     max_consecutive_blanks = 30
 
     # Start from the row after headers
-    start_idx = 0 if header_row_idx == -1 else header_row_idx
+    start_idx = 0 if header_row_idx == -1 else header_row_idx + 1
 
     for row_idx, row in enumerate(data[start_idx:], start=start_idx):
         qa_meta.total_rows_seen += 1

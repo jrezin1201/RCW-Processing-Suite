@@ -57,9 +57,10 @@ async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
         "result": None
     })
 
-    # Enqueue background job
+    # Enqueue background job with original filename
     from app.services.worker_tasks import process_lennar_file
-    enqueue_job(process_lennar_file, job_id, str(file_path))
+    original_filename = Path(file.filename).stem  # Get filename without extension
+    enqueue_job(process_lennar_file, job_id, str(file_path), original_filename)
 
     return UploadResponse(job_id=job_id)
 
@@ -113,9 +114,11 @@ async def download_result(job_id: str):
     if not os.path.exists(output_path):
         raise HTTPException(status_code=404, detail=f"Output file not found: {output_path}")
 
+    # Use the actual filename from the output path
+    download_filename = Path(output_path).name
     return FileResponse(
         path=output_path,
-        filename=f"contracts_forms_{job_id}.xlsx",
+        filename=download_filename,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
