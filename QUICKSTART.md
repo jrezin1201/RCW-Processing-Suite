@@ -8,7 +8,6 @@ A complete, production-ready FastAPI template with:
 ✅ FastAPI with Pydantic v2
 ✅ SQLModel ORM + PostgreSQL
 ✅ Alembic migrations
-✅ Redis + RQ background jobs
 ✅ JWT authentication
 ✅ Role-based access control (admin/user)
 ✅ Structured JSON logging
@@ -23,8 +22,7 @@ app/
 ├── db/             # Database session
 ├── models/         # User model with RBAC
 ├── schemas/        # Pydantic request/response schemas
-├── services/       # Business logic layer
-└── workers/        # Background tasks with RQ
+└── services/       # Business logic layer
 
 tests/              # 5 test modules (22 tests)
 alembic/            # Database migrations
@@ -73,17 +71,14 @@ poetry install
 # 3. Copy environment file
 cp .env.example .env
 
-# 4. Start databases (Docker)
-docker-compose up -d postgres redis
+# 4. Start database (Docker)
+docker-compose up -d postgres
 
 # 5. Run migrations
 poetry run alembic upgrade head
 
 # 6. Start API server
 poetry run uvicorn app.main:app --reload
-
-# 7. Start worker (separate terminal)
-poetry run rq worker default --with-scheduler
 ```
 
 ## 🔑 Default Credentials
@@ -147,11 +142,11 @@ The test suite includes 22 tests covering:
 - Health checks
 - Service layer
 
-**Note:** Tests require PostgreSQL and Redis running. Use Docker for easiest setup:
+**Note:** Tests require PostgreSQL running. Use Docker for easiest setup:
 
 ```bash
-# Start databases
-docker-compose up -d postgres redis
+# Start database
+docker-compose up -d postgres
 
 # Run tests
 poetry run pytest -v
@@ -173,12 +168,6 @@ poetry run pytest --cov=app --cov-report=html
 - Bcrypt password hashing
 - Role-based access control
 - Protected route dependencies
-
-### Background Jobs
-- RQ (Redis Queue) for async tasks
-- Independent worker process
-- Job status tracking
-- Examples: email, data processing
 
 ### Production Ready
 - Type hints throughout

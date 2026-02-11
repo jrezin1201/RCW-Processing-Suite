@@ -57,7 +57,7 @@ async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
         "result": None
     })
 
-    # Enqueue background job with original filename
+    # Run processing job
     from app.services.worker_tasks import process_lennar_file
     original_filename = Path(file.filename).stem  # Get filename without extension
     enqueue_job(process_lennar_file, job_id, str(file_path), original_filename)

@@ -6,7 +6,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-from app.models.schemas import SummaryRow, QAReport
+from app.models.schemas import QAReport
 
 
 def write_summary_excel(
@@ -312,50 +312,3 @@ def write_qa_sheet(ws, qa_report: QAReport, category_headers: List[str] = None):
     ws.column_dimensions["D"].width = 30
 
 
-def write_summary_excel_legacy(
-    summary_rows: List[SummaryRow],
-    qa_report: QAReport,
-    job_id: str,
-    phase: str = None,
-    project_name: str = None,
-    house_string: str = None,
-    original_filename: str = None
-) -> str:
-    """
-    Legacy function for backward compatibility with SummaryRow objects.
-
-    Converts SummaryRow objects to dicts and uses fixed category headers.
-    """
-    # Fixed category headers for legacy mode
-    category_headers = [
-        "EXT PRIME", "EXTERIOR", "EXTERIOR UA", "INTERIOR",
-        "ROLL WALLS FINAL", "TOUCH UP", "Q4 REVERSAL"
-    ]
-
-    # Convert SummaryRow objects to dicts
-    rows_as_dicts = []
-    for row in summary_rows:
-        row_dict = {
-            "lot_block": row.lot_block,
-            "plan": row.plan,
-            "EXT PRIME": row.ext_prime,
-            "EXTERIOR": row.exterior,
-            "EXTERIOR UA": row.exterior_ua,
-            "INTERIOR": row.interior,
-            "ROLL WALLS FINAL": row.roll_walls_final,
-            "TOUCH UP": row.touch_up,
-            "Q4 REVERSAL": row.q4_reversal,
-            "total": row.total,
-        }
-        rows_as_dicts.append(row_dict)
-
-    return write_summary_excel(
-        rows_as_dicts,
-        qa_report,
-        job_id,
-        category_headers,
-        phase=phase,
-        project_name=project_name,
-        house_string=house_string,
-        original_filename=original_filename
-    )

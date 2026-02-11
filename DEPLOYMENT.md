@@ -23,9 +23,6 @@ python-3.11.0
 
 **.env.example** (for environment variables):
 ```
-# Optional: Redis for background jobs
-REDIS_URL=redis://localhost:6379
-
 # Optional: External storage
 AWS_S3_BUCKET=
 AWS_ACCESS_KEY_ID=
@@ -151,7 +148,6 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
 - [ ] SSL/HTTPS (usually automatic on platforms)
 
 ### Optional but Recommended:
-- [ ] Redis for background jobs (Redis Cloud free tier)
 - [ ] Error tracking (Sentry free tier)
 - [ ] Custom domain name
 - [ ] Rate limiting

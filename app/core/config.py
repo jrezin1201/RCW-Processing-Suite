@@ -15,9 +15,6 @@ class Settings:
     API_V1_PREFIX: str = "/api/v1"
     DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
 
-    # Redis
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
     # File Storage
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "data/uploads")
     OUTPUT_DIR: str = os.getenv("OUTPUT_DIR", "data/outputs")

@@ -6,8 +6,6 @@ python-multipart
 openpyxl
 pandas
 xlrd
-redis
-rq
 pyyaml
 pytest
 httpx

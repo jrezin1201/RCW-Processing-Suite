@@ -4,7 +4,7 @@ from collections import defaultdict, Counter
 import re
 import logging
 
-from app.models.schemas import ParsedRow, SummaryRow, QAReport, QAMeta
+from app.models.schemas import ParsedRow, QAReport, QAMeta
 from app.services.category_mapper import CategoryMapper, MappingResult, organize_headers
 
 logger = logging.getLogger(__name__)
@@ -81,8 +81,9 @@ def aggregate_data(
 
     # Group by (lot_block, plan) and category
     # Using dict of dicts for flexible category columns
-    aggregated_data: Dict[Tuple[str, str], Dict[str, float]] = defaultdict(
-        lambda: defaultdict(float)
+    # Values are stored as lists to support duplicate categories per house
+    aggregated_data: Dict[Tuple[str, str], Dict[str, list]] = defaultdict(
+        lambda: defaultdict(list)
     )
 
     # Track the order in which lot/plan combinations first appear
@@ -140,20 +141,35 @@ def aggregate_data(
         if group_key not in appearance_order:
             appearance_order[group_key] = len(appearance_order)
 
-        # Add to the category
-        aggregated_data[group_key][category] += amount
+        # Add to the category (append to list for duplicate support)
+        aggregated_data[group_key][category].append(amount)
 
     # Get final category headers — only include categories that actually have data
     active_headers = [h for h in mapper.get_category_headers() if counts_per_category.get(h, 0) > 0]
     # Organize so UA variants are adjacent to their base category
-    final_headers = organize_headers(active_headers)
+    organized_headers = organize_headers(active_headers)
+
+    # Expand headers to account for duplicates: if any house has multiple
+    # entries for the same category, create additional numbered columns.
+    # e.g. two "TOUCH UP" entries → "TOUCH UP" and "TOUCH UP (2)"
+    max_occurrences: Dict[str, int] = defaultdict(int)
+    for categories in aggregated_data.values():
+        for cat, amounts in categories.items():
+            if len(amounts) > max_occurrences[cat]:
+                max_occurrences[cat] = len(amounts)
+
+    final_headers = []
+    for header in organized_headers:
+        final_headers.append(header)
+        for i in range(2, max_occurrences.get(header, 1) + 1):
+            final_headers.append(f"{header} ({i})")
 
     # Create summary rows as dicts (flexible columns)
     summary_rows = []
     suspicious_totals = []
 
     for (lot_block, plan), categories in aggregated_data.items():
-        total = sum(categories.values())
+        total = sum(amt for amounts in categories.values() for amt in amounts)
 
         # Check for suspicious totals
         if total < 0:
@@ -177,9 +193,15 @@ def aggregate_data(
             "plan": plan,
         }
 
-        # Add all category values
-        for header in final_headers:
-            row_dict[header] = categories.get(header, 0.0)
+        # Add category values, spreading duplicates into numbered columns
+        for header in organized_headers:
+            amounts = categories.get(header, [])
+            # First occurrence goes into the base column
+            row_dict[header] = amounts[0] if amounts else 0.0
+            # Additional occurrences go into numbered columns
+            for i in range(2, max_occurrences.get(header, 1) + 1):
+                idx = i - 1  # 0-indexed into amounts list
+                row_dict[f"{header} ({i})"] = amounts[idx] if idx < len(amounts) else 0.0
 
         row_dict["total"] = total
 
@@ -224,109 +246,3 @@ def aggregate_data(
             logger.info(f"  - {cat['header']}: {counts_per_category.get(cat['header'], 0)} rows")
 
     return summary_rows, qa_report, final_headers
-
-
-def aggregate_data_legacy(
-    rows: List[ParsedRow],
-    qa_meta: QAMeta
-) -> Tuple[List[SummaryRow], QAReport]:
-    """
-    Legacy aggregation for backward compatibility.
-
-    Uses fixed category columns. Prefer aggregate_data() for new code.
-    """
-    from app.services.classifier import classify_row
-
-    # Fixed categories for legacy mode
-    aggregated_data: Dict[Tuple[str, str], Dict[str, float]] = defaultdict(
-        lambda: {
-            "EXT PRIME": 0.0,
-            "EXTERIOR": 0.0,
-            "EXTERIOR UA": 0.0,
-            "INTERIOR": 0.0,
-            "ROLL WALLS FINAL": 0.0,
-            "TOUCH UP": 0.0,
-            "Q4 REVERSAL": 0.0,
-        }
-    )
-
-    appearance_order: Dict[Tuple[str, str], int] = {}
-    counts_per_bucket: Dict[str, int] = defaultdict(int)
-    unmapped_tasks: List[str] = []
-
-    for row in rows:
-        bucket = classify_row(row)
-        counts_per_bucket[bucket] += 1
-
-        if bucket == "UNMAPPED":
-            if row.task_text:
-                unmapped_tasks.append(row.task_text)
-            continue
-
-        amount = row.total if row.total is not None else row.subtotal
-        if amount is None:
-            amount = 0.0
-
-        cleaned_lot = clean_lot_number(row.lot_block or "")
-        combined_plan = combine_plan_elevation(row.plan or "", row.elevation or "")
-        group_key = (cleaned_lot, combined_plan)
-
-        if group_key not in appearance_order:
-            appearance_order[group_key] = len(appearance_order)
-
-        if bucket in aggregated_data[group_key]:
-            aggregated_data[group_key][bucket] += amount
-
-    summary_rows = []
-    suspicious_totals = []
-
-    for (lot_block, plan), buckets in aggregated_data.items():
-        total = sum(buckets.values())
-
-        if total < 0:
-            suspicious_totals.append({
-                "lot_block": lot_block,
-                "plan": plan,
-                "total": total,
-                "reason": "Negative total"
-            })
-        elif total > 100000:
-            suspicious_totals.append({
-                "lot_block": lot_block,
-                "plan": plan,
-                "total": total,
-                "reason": "Unusually high total (> $100k)"
-            })
-
-        summary_row = SummaryRow(
-            lot_block=lot_block,
-            plan=plan,
-            ext_prime=buckets["EXT PRIME"],
-            exterior=buckets["EXTERIOR"],
-            exterior_ua=buckets["EXTERIOR UA"],
-            interior=buckets["INTERIOR"],
-            roll_walls_final=buckets["ROLL WALLS FINAL"],
-            touch_up=buckets["TOUCH UP"],
-            q4_reversal=buckets["Q4 REVERSAL"],
-            total=total
-        )
-        summary_rows.append(summary_row)
-
-    summary_rows.sort(key=lambda x: appearance_order.get(
-        (x.lot_block, x.plan), float('inf')
-    ))
-
-    unmapped_counter = Counter(unmapped_tasks)
-    unmapped_examples = [
-        {"task_text": task, "count": count}
-        for task, count in unmapped_counter.most_common(30)
-    ]
-
-    qa_report = QAReport(
-        counts_per_bucket=dict(counts_per_bucket),
-        unmapped_examples=unmapped_examples,
-        suspicious_totals=suspicious_totals,
-        parse_meta=qa_meta
-    )
-
-    return summary_rows, qa_report

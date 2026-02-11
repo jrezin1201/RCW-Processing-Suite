@@ -19,20 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis for caching and RQ
-  redis:
-    image: redis:7-alpine
-    container_name: fastapi_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # FastAPI Application
   api:
     build:
@@ -49,8 +35,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=fastapi_saas
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
       - SECRET_KEY=your-secret-key-change-in-production
       - FIRST_SUPERUSER_EMAIL=admin@example.com
       - FIRST_SUPERUSER_PASSWORD=changethis123
@@ -59,39 +43,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/v1/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # RQ Worker for background jobs
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fastapi_worker
-    command: rq worker default --with-scheduler
-    environment:
-      - DEBUG=True
-      - POSTGRES_SERVER=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=fastapi_saas
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - SECRET_KEY=your-secret-key-change-in-production
-    volumes:
-      - .:/app
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
 volumes:
   postgres_data:
-  redis_data:

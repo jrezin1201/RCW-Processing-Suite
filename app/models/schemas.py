@@ -54,20 +54,6 @@ class QAMeta(BaseModel):
     rows_skipped_missing_fields: int = Field(0, description="Rows skipped due to missing fields")
 
 
-class SummaryRow(BaseModel):
-    """Model for aggregated summary row."""
-    lot_block: str = Field(..., description="Lot/Block identifier")
-    plan: str = Field(..., description="Plan identifier")
-    ext_prime: float = Field(0.0, description="EXT PRIME total")
-    exterior: float = Field(0.0, description="EXTERIOR total")
-    exterior_ua: float = Field(0.0, description="EXTERIOR UA total")
-    interior: float = Field(0.0, description="INTERIOR total")
-    roll_walls_final: float = Field(0.0, description="ROLL WALLS FINAL total")
-    touch_up: float = Field(0.0, description="TOUCH UP total")
-    q4_reversal: float = Field(0.0, description="Q4 REVERSAL total")
-    total: float = Field(0.0, description="Total amount")
-
-
 class QAReport(BaseModel):
     """QA report model."""
     counts_per_bucket: Dict[str, int] = Field(..., description="Count of rows per bucket")

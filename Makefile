@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format clean docker-up docker-down migrate worker
+.PHONY: help install dev test lint format clean docker-up docker-down migrate
 
 help:
 	@echo "FastAPI SaaS Starter - Available Commands"
@@ -9,7 +9,6 @@ help:
 	@echo ""
 	@echo "Development:"
 	@echo "  make dev          Start development server"
-	@echo "  make worker       Start RQ worker"
 	@echo "  make docker-up    Start all services with Docker"
 	@echo "  make docker-down  Stop all Docker services"
 	@echo ""
@@ -38,9 +37,6 @@ setup:
 
 dev:
 	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-worker:
-	rq worker default --with-scheduler
 
 docker-up:
 	docker-compose up -d
