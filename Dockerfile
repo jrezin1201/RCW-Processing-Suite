@@ -33,7 +33,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY --chown=appuser:appuser app ./app
 COPY --chown=appuser:appuser tests ./tests
-COPY --chown=appuser:appuser pyproject.toml README.md ARCHITECTURE.md ./
+COPY --chown=appuser:appuser pyproject.toml README.md ./
 
 RUN mkdir -p /app/data/uploads /app/data/outputs \
     && chown -R appuser:appuser /app/data
