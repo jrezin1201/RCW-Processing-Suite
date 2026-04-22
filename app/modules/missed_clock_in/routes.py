@@ -5,7 +5,7 @@ import math
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -36,7 +36,7 @@ def _clean(val: Any) -> str:
     return str(val).strip()
 
 
-def _parse_bytes(raw: bytes) -> List[dict]:
+def _parse_bytes(raw: bytes) -> list[dict]:
     """Write bytes to a temp file so pandas can read them, then parse."""
     tmp = tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False)
     try:

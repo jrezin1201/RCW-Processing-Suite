@@ -1,19 +1,19 @@
 """Excel output writer service for generating formatted summary files."""
-import os
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
+
 import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from app.modules.lennar.schemas import QAReport
 
 
 def write_summary_excel(
-    summary_rows: List[Dict[str, Any]],
+    summary_rows: list[dict[str, Any]],
     qa_report: QAReport,
     job_id: str,
-    category_headers: List[str],
+    category_headers: list[str],
     phase: str = None,
     project_name: str = None,
     house_string: str = None,
@@ -51,7 +51,7 @@ def write_summary_excel(
     yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
     light_blue_fill = PatternFill(start_color="E0F2F7", end_color="E0F2F7", fill_type="solid")
     light_gray_fill = PatternFill(start_color="F0F0F0", end_color="F0F0F0", fill_type="solid")
-    thin_border = Border(
+    Border(
         left=Side(style="thin"),
         right=Side(style="thin"),
         top=Side(style="thin"),
@@ -93,7 +93,7 @@ def write_summary_excel(
             cell.fill = light_gray_fill
 
     # Calculate total column index
-    total_col_idx = len(all_headers) + 1  # +1 because we start from column 2
+    len(all_headers) + 1  # +1 because we start from column 2
 
     # Write data rows starting from row 4
     data_start_row = 4
@@ -223,7 +223,7 @@ def write_summary_excel(
     return str(output_path)
 
 
-def write_qa_sheet(ws, qa_report: QAReport, category_headers: List[str] = None):
+def write_qa_sheet(ws, qa_report: QAReport, category_headers: list[str] = None):
     """
     Write QA report data to a worksheet.
 
@@ -282,7 +282,10 @@ def write_qa_sheet(ws, qa_report: QAReport, category_headers: List[str] = None):
         current_row += 1
 
     # Unmapped tasks (excluding auto-created marker entries)
-    regular_unmapped = [ex for ex in qa_report.unmapped_examples if "[AUTO-CREATED]" not in str(ex.get("task_text", ""))]
+    regular_unmapped = [
+        ex for ex in qa_report.unmapped_examples
+        if "[AUTO-CREATED]" not in str(ex.get("task_text", ""))
+    ]
     if regular_unmapped:
         ws.cell(row=current_row, column=1, value="Unmapped Task Examples").font = header_font
         current_row += 1

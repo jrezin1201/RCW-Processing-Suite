@@ -1,16 +1,15 @@
 """Parser for Lennar scheduled tasks Excel exports."""
-from typing import List, Dict, Tuple, Optional, Any
-from datetime import datetime
-import os
 import logging
 import re
+from datetime import datetime
+from typing import Any
 
 from app.modules.lennar.schemas import ParsedRow, QAMeta
 
 logger = logging.getLogger(__name__)
 
 
-def extract_painting_task(task_value: str) -> Optional[str]:
+def extract_painting_task(task_value: str) -> str | None:
     """
     Extract the normalized task name from a Painting task string.
 
@@ -37,7 +36,7 @@ def extract_painting_task(task_value: str) -> Optional[str]:
     return match.group(1).strip()
 
 
-def extract_project_name_from_b3(ws) -> Optional[str]:
+def extract_project_name_from_b3(ws) -> str | None:
     """
     Extract project name from cell B3 or B2 (between first and second hyphen).
     Checks B2 first, then B3 as fallback.
@@ -63,7 +62,7 @@ def extract_project_name_from_b3(ws) -> Optional[str]:
     return None
 
 
-def extract_house_string_from_b5(ws) -> Optional[str]:
+def extract_house_string_from_b5(ws) -> str | None:
     """
     Extract house string from cell B5 or B4 (text after "PH## - ").
     Checks B4 first, then B5 as fallback.
@@ -90,7 +89,7 @@ def extract_house_string_from_b5(ws) -> Optional[str]:
     return None
 
 
-def extract_phase_from_b5(ws) -> Optional[str]:
+def extract_phase_from_b5(ws) -> str | None:
     """
     Extract phase number from cell B5 or B4 (PHxx pattern).
     Checks B4 first, then B5 as fallback.
@@ -116,7 +115,7 @@ def extract_phase_from_b5(ws) -> Optional[str]:
     return None
 
 
-def extract_phase_from_column_d(ws, column_map: Dict[str, int], max_rows: int = 100) -> Optional[str]:
+def extract_phase_from_column_d(ws, column_map: dict[str, int], max_rows: int = 100) -> str | None:
     """
     Extract phase number from column D by looking for PH pattern (e.g., PH07).
 
@@ -144,7 +143,7 @@ def extract_phase_from_column_d(ws, column_map: Dict[str, int], max_rows: int = 
     return None
 
 
-def extract_phase_from_pandas_data(data: List, max_rows: int = 100) -> Optional[str]:
+def extract_phase_from_pandas_data(data: list, max_rows: int = 100) -> str | None:
     """
     Extract phase number from column D in pandas data.
 
@@ -170,7 +169,7 @@ def extract_phase_from_pandas_data(data: List, max_rows: int = 100) -> Optional[
     return None
 
 
-def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Optional[str], Optional[str]]:
+def parse_lennar_export(filepath: str) -> tuple[list[ParsedRow], QAMeta, str | None, str | None, str | None]:
     """
     Parse a Lennar scheduled tasks Excel export (supports both .xls and .xlsx).
 
@@ -198,17 +197,16 @@ def parse_lennar_export(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optiona
             import pandas as pd
             try:
                 df = pd.read_excel(filepath, engine=None)
-                logger.info(f"Successfully read with pandas auto-detect, processing...")
+                logger.info("Successfully read with pandas auto-detect, processing...")
                 return parse_with_pandas_df(df)
             except Exception as e3:
                 logger.error(f"All parsing attempts failed: {e3}")
                 raise Exception(f"Could not parse file as either .xls or .xlsx format: {str(e)[:200]}")
 
 
-def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Optional[str], Optional[str]]:
+def parse_with_openpyxl(filepath: str) -> tuple[list[ParsedRow], QAMeta, str | None, str | None, str | None]:
     """Parse using openpyxl for .xlsx files."""
     import openpyxl
-    from openpyxl.worksheet.worksheet import Worksheet
 
     wb = openpyxl.load_workbook(filepath, data_only=True)
     ws = wb.active
@@ -224,7 +222,8 @@ def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optiona
     header_row_idx, column_map = find_header_row_openpyxl(ws)
 
     if header_row_idx is None:
-        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0), phase, project_name, house_string
+        empty_meta = QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0)
+        return [], empty_meta, phase, project_name, house_string
 
     # Parse data rows
     parsed_rows = []
@@ -259,21 +258,21 @@ def parse_with_openpyxl(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optiona
     return parsed_rows, qa_meta, phase, project_name, house_string
 
 
-def parse_with_pandas(filepath: str) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Optional[str], Optional[str]]:
+def parse_with_pandas(filepath: str) -> tuple[list[ParsedRow], QAMeta, str | None, str | None, str | None]:
     """Parse using pandas for .xls files (old format)."""
     import pandas as pd
 
     # Read the Excel file with pandas (try xlrd first for .xls)
     try:
         df = pd.read_excel(filepath, engine='xlrd')
-    except:
+    except Exception:
         # Fallback to auto-detect
         df = pd.read_excel(filepath, engine=None)
 
     return parse_with_pandas_df(df)
 
 
-def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Optional[str], Optional[str]]:
+def parse_with_pandas_df(df) -> tuple[list[ParsedRow], QAMeta, str | None, str | None, str | None]:
     """Parse a pandas DataFrame."""
     import pandas as pd
 
@@ -329,7 +328,8 @@ def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Op
     header_row_idx, column_map = find_header_row_pandas(headers, data)
 
     if header_row_idx is None:
-        return [], QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0), phase, project_name, house_string
+        empty_meta = QAMeta(total_rows_seen=0, rows_parsed=0, rows_skipped_missing_fields=0)
+        return [], empty_meta, phase, project_name, house_string
 
     # Parse data rows
     parsed_rows = []
@@ -366,9 +366,8 @@ def parse_with_pandas_df(df) -> Tuple[List[ParsedRow], QAMeta, Optional[str], Op
     return parsed_rows, qa_meta, phase, project_name, house_string
 
 
-def find_header_row_openpyxl(ws) -> Tuple[Optional[int], Dict[str, int]]:
+def find_header_row_openpyxl(ws) -> tuple[int | None, dict[str, int]]:
     """Find header row for openpyxl worksheet."""
-    from openpyxl.worksheet.worksheet import Worksheet
 
     required_headers = ["lot/block", "plan", "task", "task start date"]
     max_rows_to_check = 50
@@ -396,7 +395,7 @@ def find_header_row_openpyxl(ws) -> Tuple[Optional[int], Dict[str, int]]:
     return None, {}
 
 
-def find_header_row_pandas(headers: List, data: List) -> Tuple[Optional[int], Dict[str, int]]:
+def find_header_row_pandas(headers: list, data: list) -> tuple[int | None, dict[str, int]]:
     """Find header row for pandas data."""
     required_headers = ["lot/block", "plan", "task", "task start date"]
 
@@ -411,7 +410,7 @@ def find_header_row_pandas(headers: List, data: List) -> Tuple[Optional[int], Di
                 break
 
     if len(found_headers) == len(required_headers):
-        column_map = build_column_map(headers)
+        column_map = build_column_map(tuple(headers))
         return -1, column_map  # -1 indicates headers are in column names
 
     # Otherwise search in data rows
@@ -438,7 +437,7 @@ def find_header_row_pandas(headers: List, data: List) -> Tuple[Optional[int], Di
     return None, {}
 
 
-def find_header_row(ws) -> Tuple[Optional[int], Dict[str, int]]:
+def find_header_row(ws) -> tuple[int | None, dict[str, int]]:
     """Legacy function - redirects to openpyxl version."""
     return find_header_row_openpyxl(ws)
 
@@ -451,7 +450,7 @@ def is_row_blank_pandas(row: list) -> bool:
     return all(pd.isna(cell) or str(cell).strip() == "" for cell in row)
 
 
-def build_column_map(header_row: tuple) -> Dict[str, int]:
+def build_column_map(header_row: tuple) -> dict[str, int]:
     """
     Build a mapping of column names to indices.
 
@@ -507,7 +506,7 @@ def is_row_blank(row: tuple) -> bool:
     return all(cell is None or str(cell).strip() == "" for cell in row)
 
 
-def parse_row(row: tuple, column_map: Dict[str, int]) -> ParsedRow:
+def parse_row(row: tuple, column_map: dict[str, int]) -> ParsedRow:
     """
     Parse a single data row.
 
@@ -525,7 +524,7 @@ def parse_row(row: tuple, column_map: Dict[str, int]) -> ParsedRow:
             return row[idx]
         return None
 
-    def parse_money(value: Any) -> Optional[float]:
+    def parse_money(value: Any) -> float | None:
         """Parse money value to float."""
         if value is None:
             return None
@@ -544,7 +543,7 @@ def parse_row(row: tuple, column_map: Dict[str, int]) -> ParsedRow:
         except (ValueError, TypeError):
             return None
 
-    def parse_date(value: Any) -> Optional[datetime]:
+    def parse_date(value: Any) -> datetime | None:
         """Parse date value."""
         if value is None:
             return None
@@ -562,7 +561,7 @@ def parse_row(row: tuple, column_map: Dict[str, int]) -> ParsedRow:
                     return datetime.strptime(date_str, fmt)
                 except ValueError:
                     continue
-        except:
+        except Exception:
             pass
 
         return None

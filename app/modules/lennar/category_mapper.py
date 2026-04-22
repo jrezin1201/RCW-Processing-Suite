@@ -5,10 +5,10 @@ Key principle: NEVER lose dollars. If a task doesn't map to an existing
 template category, create a new category column automatically.
 """
 
-import re
 import logging
-from typing import Optional, Dict, List, Any, Tuple, Set
+import re
 from dataclasses import dataclass, field
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +28,9 @@ class TaskSignals:
     keyword_rollwalls: bool = False
     keyword_baseshoe: bool = False
 
-    matched_keywords: List[str] = field(default_factory=list)
+    matched_keywords: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "is_ext": self.is_ext,
             "is_int": self.is_int,
@@ -52,10 +52,10 @@ class MappingResult:
     category_display: str
     reason: str
     is_new_category: bool = False
-    signals: TaskSignals = None
+    signals: TaskSignals | None = None
     scope_fragment: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "category_display": self.category_display,
             "reason": self.reason,
@@ -237,8 +237,8 @@ def parse_signals(task_text: str) -> TaskSignals:
 def map_category(
     task_text: str,
     signals: TaskSignals,
-    template_canon_to_display: Dict[str, str]
-) -> Tuple[Optional[str], str]:
+    template_canon_to_display: dict[str, str]
+) -> tuple[str | None, str]:
     """
     Map task to existing template category (template-first approach).
 
@@ -246,7 +246,7 @@ def map_category(
         (category_display, reason) - category_display is None if no match
     """
     # Helper to check if canonical category exists in template
-    def template_has(canon_key: str) -> Optional[str]:
+    def template_has(canon_key: str) -> str | None:
         """Return display name if canonical key exists in template."""
         return template_canon_to_display.get(canon_key)
 
@@ -412,7 +412,7 @@ def compute_base_category_name(task_text: str, signals: TaskSignals) -> str:
 def create_category_name(
     task_text: str,
     signals: TaskSignals,
-    existing_canonicals: Set[str]
+    existing_canonicals: set[str]
 ) -> str:
     """
     Create a new unique category name from task text for auto-category creation.
@@ -440,7 +440,7 @@ def _strip_prefix(h: str) -> str:
     return h
 
 
-def organize_headers(headers: List[str]) -> List[str]:
+def organize_headers(headers: list[str]) -> list[str]:
     """
     Organize headers so UA variants are placed next to their base category.
 
@@ -453,7 +453,7 @@ def organize_headers(headers: List[str]) -> List[str]:
     non_ua_headers = [h for h in headers if not h.upper().strip().endswith(' UA')]
 
     # Match each UA header to its best non-UA base
-    ua_to_base: Dict[str, str] = {}
+    ua_to_base: dict[str, str] = {}
 
     for ua in ua_headers:
         ua_upper = ua.upper().strip()
@@ -490,7 +490,7 @@ def organize_headers(headers: List[str]) -> List[str]:
 
     # Build result: each non-UA header followed by its UA partner(s)
     result = []
-    placed_ua: Set[str] = set()
+    placed_ua: set[str] = set()
 
     for header in non_ua_headers:
         result.append(header)
@@ -512,7 +512,7 @@ class CategoryMapper:
     Manages category mapping with template-first approach and auto-creation.
     """
 
-    def __init__(self, template_headers: List[str] = None):
+    def __init__(self, template_headers: list[str] = None):
         """
         Initialize with template headers.
 
@@ -532,15 +532,15 @@ class CategoryMapper:
             self.category_headers = list(self.default_categories)
 
         # Build canonical -> display mapping
-        self.template_canon_to_display: Dict[str, str] = {}
+        self.template_canon_to_display: dict[str, str] = {}
         for header in self.category_headers:
             self.template_canon_to_display[canonical(header)] = header
 
         # Track created categories
-        self.created_categories: List[Dict[str, Any]] = []
-        self._created_canonicals: Set[str] = set()
+        self.created_categories: list[dict[str, Any]] = []
+        self._created_canonicals: set[str] = set()
 
-    def get_all_canonicals(self) -> Set[str]:
+    def get_all_canonicals(self) -> set[str]:
         """Get all canonical category names (template + created)."""
         return set(self.template_canon_to_display.keys()) | self._created_canonicals
 
@@ -616,10 +616,10 @@ class CategoryMapper:
                     cat["example_tasks"].append(task_text)
                 break
 
-    def get_category_headers(self) -> List[str]:
+    def get_category_headers(self) -> list[str]:
         """Get all category headers (template + created) in order."""
         return self.category_headers
 
-    def get_created_categories_report(self) -> List[Dict[str, Any]]:
+    def get_created_categories_report(self) -> list[dict[str, Any]]:
         """Get report of auto-created categories."""
         return self.created_categories

@@ -1,11 +1,10 @@
 """Data aggregation service for summarizing classified rows."""
-from typing import List, Dict, Tuple, Any
-from collections import defaultdict, Counter
-import re
 import logging
+from collections import Counter, defaultdict
+from typing import Any
 
-from app.modules.lennar.schemas import ParsedRow, QAReport, QAMeta
 from app.modules.lennar.category_mapper import CategoryMapper, MappingResult, organize_headers
+from app.modules.lennar.schemas import ParsedRow, QAMeta, QAReport
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +56,10 @@ def combine_plan_elevation(plan: str, elevation: str) -> str:
 
 
 def aggregate_data(
-    rows: List[ParsedRow],
+    rows: list[ParsedRow],
     qa_meta: QAMeta,
-    template_headers: List[str] = None
-) -> Tuple[List[Dict[str, Any]], QAReport, List[str]]:
+    template_headers: list[str] = None
+) -> tuple[list[dict[str, Any]], QAReport, list[str]]:
     """
     Aggregate classified rows by lot/plan and create summary.
 
@@ -82,17 +81,17 @@ def aggregate_data(
     # Group by (lot_block, plan) and category
     # Using dict of dicts for flexible category columns
     # Values are stored as lists to support duplicate categories per house
-    aggregated_data: Dict[Tuple[str, str], Dict[str, list]] = defaultdict(
+    aggregated_data: dict[tuple[str, str], dict[str, list]] = defaultdict(
         lambda: defaultdict(list)
     )
 
     # Track the order in which lot/plan combinations first appear
-    appearance_order: Dict[Tuple[str, str], int] = {}
+    appearance_order: dict[tuple[str, str], int] = {}
 
     # Track statistics
-    counts_per_category: Dict[str, int] = defaultdict(int)
-    mapping_details: List[Dict[str, Any]] = []
-    unmapped_tasks: List[str] = []  # For backward compatibility
+    counts_per_category: dict[str, int] = defaultdict(int)
+    mapping_details: list[dict[str, Any]] = []
+    unmapped_tasks: list[str] = []  # For backward compatibility
 
     # Process each row
     for row in rows:
@@ -152,7 +151,7 @@ def aggregate_data(
     # Expand headers to account for duplicates: if any house has multiple
     # entries for the same category, create additional numbered columns.
     # e.g. two "TOUCH UP" entries → "TOUCH UP" and "TOUCH UP (2)"
-    max_occurrences: Dict[str, int] = defaultdict(int)
+    max_occurrences: dict[str, int] = defaultdict(int)
     for categories in aggregated_data.values():
         for cat, amounts in categories.items():
             if len(amounts) > max_occurrences[cat]:
@@ -188,7 +187,7 @@ def aggregate_data(
             })
 
         # Create row dict with all category columns
-        row_dict = {
+        row_dict: dict[str, Any] = {
             "lot_block": lot_block,
             "plan": plan,
         }
@@ -222,11 +221,11 @@ def aggregate_data(
     # Add created categories to unmapped_examples for visibility
     created_report = mapper.get_created_categories_report()
     if created_report:
-        for cat in created_report:
+        for created_cat in created_report:
             unmapped_examples.append({
-                "task_text": f"[AUTO-CREATED] {cat['header']}",
-                "count": counts_per_category.get(cat['header'], 0),
-                "examples": cat.get("example_tasks", [])
+                "task_text": f"[AUTO-CREATED] {created_cat['header']}",
+                "count": counts_per_category.get(created_cat['header'], 0),
+                "examples": created_cat.get("example_tasks", [])
             })
 
     # Create QA report
@@ -242,7 +241,7 @@ def aggregate_data(
     logger.info(f"Categories used: {list(counts_per_category.keys())}")
     if created_report:
         logger.info(f"Auto-created {len(created_report)} new categories:")
-        for cat in created_report:
-            logger.info(f"  - {cat['header']}: {counts_per_category.get(cat['header'], 0)} rows")
+        for created_cat in created_report:
+            logger.info(f"  - {created_cat['header']}: {counts_per_category.get(created_cat['header'], 0)} rows")
 
     return summary_rows, qa_report, final_headers

@@ -8,16 +8,15 @@ Key test scenarios:
 - No dollars are lost
 """
 
-import pytest
 from app.modules.lennar.category_mapper import (
-    normalize_task_text,
-    extract_scope_fragment,
-    parse_signals,
-    map_category,
-    create_category_name,
-    canonical,
     CategoryMapper,
     TaskSignals,
+    canonical,
+    create_category_name,
+    extract_scope_fragment,
+    map_category,
+    normalize_task_text,
+    parse_signals,
 )
 
 

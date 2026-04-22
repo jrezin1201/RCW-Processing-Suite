@@ -10,18 +10,18 @@ from __future__ import annotations
 import importlib
 import logging
 import pkgutil
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def load_modules(app) -> List[Dict[str, Any]]:
+def load_modules(app) -> list[dict[str, Any]]:
     """Discover every subpackage under ``app.modules`` and register it.
 
     Returns a list of MODULE_META dicts for modules that provide one.
     """
     modules_pkg = importlib.import_module("app.modules")
-    registered: List[Dict[str, Any]] = []
+    registered: list[dict[str, Any]] = []
 
     for info in pkgutil.iter_modules(modules_pkg.__path__):
         if not info.ispkg:

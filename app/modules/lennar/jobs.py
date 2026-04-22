@@ -1,12 +1,12 @@
 """Job management service using in-memory storage."""
-import uuid
-from typing import Dict, Any, Optional
 import logging
+import uuid
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # In-memory job storage
-job_storage: Dict[str, Dict[str, Any]] = {}
+job_storage: dict[str, dict[str, Any]] = {}
 
 
 def enqueue_job(func, *args, **kwargs):
@@ -31,7 +31,7 @@ def enqueue_job(func, *args, **kwargs):
     return fake_job_id
 
 
-def set_job(job_id: str, data: Dict[str, Any]) -> None:
+def set_job(job_id: str, data: dict[str, Any]) -> None:
     """
     Store job status and data.
 
@@ -42,7 +42,7 @@ def set_job(job_id: str, data: Dict[str, Any]) -> None:
     job_storage[job_id] = data
 
 
-def get_job(job_id: str) -> Optional[Dict[str, Any]]:
+def get_job(job_id: str) -> dict[str, Any] | None:
     """
     Retrieve job status and data.
 

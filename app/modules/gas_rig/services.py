@@ -3,10 +3,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Dict, List, Tuple
 
 import openpyxl
-
 
 RATE_PER_HOUR = 0.75
 JOB_RE = re.compile(r"^\s*(\d{4})\b")
@@ -33,7 +31,7 @@ def _to_float(x) -> float:
         return 0.0
 
 
-def compute_job_costs_from_xlsx(file_bytes: bytes) -> List[RowOut]:
+def compute_job_costs_from_xlsx(file_bytes: bytes) -> list[RowOut]:
     """
     Reads the first sheet of an XLSX and computes:
       - JobNumber: first 4 digits at start of Location
@@ -72,7 +70,7 @@ def compute_job_costs_from_xlsx(file_bytes: bytes) -> List[RowOut]:
     COL_TOTAL_L = 12          # L (always)
     COL_TOTAL_M = 13          # M (fallback)
 
-    totals: Dict[str, float] = {}
+    totals: dict[str, float] = {}
 
     def get_cell(row, col_1_based):
         """Safely get cell value from row."""
@@ -141,7 +139,7 @@ def compute_job_costs_from_xlsx(file_bytes: bytes) -> List[RowOut]:
             totals[job] = totals.get(job, 0.0) + hours
 
     # Build output rows
-    out: List[RowOut] = []
+    out: list[RowOut] = []
     for job, hours in sorted(totals.items(), key=lambda t: int(t[0])):
         dollars = round(hours * RATE_PER_HOUR, 2)
         out.append(RowOut(job_number=job, hours=round(hours, 2), dollars=dollars))
@@ -149,7 +147,7 @@ def compute_job_costs_from_xlsx(file_bytes: bytes) -> List[RowOut]:
     return out
 
 
-def build_output_workbook(rows: List[RowOut]) -> bytes:
+def build_output_workbook(rows: list[RowOut]) -> bytes:
     """
     Creates an XLSX output file as bytes with columns:
     JobNumber | Hours | Dollars
