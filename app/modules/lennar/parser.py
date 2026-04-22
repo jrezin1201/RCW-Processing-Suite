@@ -530,7 +530,7 @@ def parse_row(row: tuple, column_map: dict[str, int]) -> ParsedRow:
             return None
 
         # If it's already a number
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return float(value)
 
         # Convert to string and clean

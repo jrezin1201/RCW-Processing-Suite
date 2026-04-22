@@ -20,7 +20,7 @@ class RowOut:
 def _to_float(x) -> float:
     if x is None:
         return 0.0
-    if isinstance(x, (int, float)):
+    if isinstance(x, int | float):
         return float(x)
     s = str(x).strip()
     if s == "" or s == "-":
