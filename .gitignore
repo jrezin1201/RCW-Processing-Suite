@@ -50,3 +50,6 @@ Thumbs.db
 # Database
 *.db
 *.sqlite3
+
+# Project docs (internal only)
+ARCHITECTURE.md

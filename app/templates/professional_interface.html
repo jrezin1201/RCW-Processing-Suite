@@ -640,6 +640,14 @@
                     <div class="subtitle">Process scheduled tasks</div>
                 </div>
             </div>
+
+            <div class="sidebar-item" onclick="showSection('missedclockin', this)">
+                <div class="icon">📝</div>
+                <div class="text">
+                    <div class="title">Missed Clock-In</div>
+                    <div class="subtitle">Generate warning notices</div>
+                </div>
+            </div>
         </div>
 
         <!-- Content Area -->
@@ -690,6 +698,24 @@
                             </p>
                         </div>
                     </div>
+
+                    <!-- Missed Clock-In Description -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <div class="step-number" style="background: #f5a623;">📝</div>
+                            <div class="step-title">Missed Clock-In Warning Notices</div>
+                        </div>
+                        <div class="step-content">
+                            <p class="step-description" style="line-height: 1.8; font-size: 15px;">
+                                Parses timekeeping Exception List exports and generates formatted employee warning notices for
+                                <strong>Missing Start Touch</strong> and <strong>Missing Stop Touch</strong> violations. Produces a single Excel
+                                workbook with an Overview sheet (breakdown by error type, repeat offenders, violations by date) plus one
+                                fully-formatted 34-row warning notice per violation, auto-populated with employee name, date, clock times,
+                                and bilingual English/Spanish policy descriptions. <strong>Clocked In Twice</strong> records are tracked in
+                                the Overview for reference.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -725,10 +751,10 @@
                     </div>
 
                     <form id="gasrig-form">
-                        <div class="upload-area" onclick="document.getElementById('gasrig-file').click()">
+                        <div id="gasrig-drop" class="upload-area" onclick="document.getElementById('gasrig-file').click()">
                             <div class="upload-icon">⚡</div>
-                            <div class="upload-text">Upload Hours Worked Excel</div>
-                            <div class="upload-subtext">Must contain 4-digit job numbers in location field</div>
+                            <div class="upload-text" id="gasrig-upload-text">Upload Hours Worked Excel</div>
+                            <div class="upload-subtext" id="gasrig-upload-subtext">Drag &amp; drop or click to browse — must contain 4-digit job numbers in location field (.xlsx)</div>
                             <input type="file" id="gasrig-file" class="file-input" accept=".xlsx">
                         </div>
 
@@ -774,10 +800,10 @@
                     </div>
 
                     <form id="lennar-form">
-                        <div class="upload-area" onclick="document.getElementById('lennar-file').click()">
+                        <div id="lennar-drop" class="upload-area" onclick="document.getElementById('lennar-file').click()">
                             <div class="upload-icon">🏗️</div>
-                            <div class="upload-text">Upload Construction Task Export</div>
-                            <div class="upload-subtext">Must contain Lot/Block, Plan, Task, and Task Start Date columns</div>
+                            <div class="upload-text" id="lennar-upload-text">Upload Construction Task Export</div>
+                            <div class="upload-subtext" id="lennar-upload-subtext">Drag &amp; drop or click to browse — must contain Lot/Block, Plan, Task, and Task Start Date columns (.xlsx, .xls)</div>
                             <input type="file" id="lennar-file" class="file-input" accept=".xlsx,.xls">
                         </div>
 
@@ -787,6 +813,57 @@
                     </form>
 
                     <div id="lennar-result" class="result-container"></div>
+                </div>
+            </div>
+
+            <!-- Missed Clock-In Section -->
+            <div id="missedclockin-section" class="section" style="display: none;">
+                <div class="project-header">
+                    <div class="project-label">PROCESSING TOOL</div>
+                    <div class="project-title">Missed Clock-In Warning Notices</div>
+                    <div class="project-subtitle">Generate warning notices from timekeeping Exception Lists</div>
+                </div>
+
+                <div class="instructions-card">
+                    <div class="instructions-header">
+                        <div class="instructions-icon">📝</div>
+                        <div class="instructions-title">About This Tool</div>
+                    </div>
+                    <div class="instructions-content" style="line-height: 1.8; font-size: 15px; margin-bottom: 25px;">
+                        Upload an Exception List Excel export from the timekeeping system. The tool identifies every
+                        <strong>Missing Start Touch</strong>, <strong>Missing Stop Touch</strong>, and <strong>Clocked In Twice</strong>
+                        violation, then produces a single workbook containing an Overview sheet plus a fully formatted 34-row warning
+                        notice for each Missing Start/Stop violation — auto-filled with the employee name, date of incident, the
+                        relevant clock time, and a bilingual English/Spanish policy description. Hours Worked and Explanation fields
+                        are left blank for manual fill-in, and the notices are ready to print.
+                    </div>
+
+                    <!-- Example Format Section -->
+                    <div class="example-section" style="margin: 25px 0;">
+                        <h3 style="color: #e4e6eb; font-size: 16px; font-weight: 600; margin-bottom: 15px;">
+                            Make sure input doc looks like this
+                        </h3>
+                        <div style="background: #24272e; padding: 20px; border-radius: 8px; border: 1px solid #3a3f4b;">
+                            <img src="/static/exception_list_format.png"
+                                 alt="Exception List Example Format"
+                                 style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                        </div>
+                    </div>
+
+                    <form id="missedclockin-form">
+                        <div id="missedclockin-drop" class="upload-area" onclick="document.getElementById('missedclockin-file').click()">
+                            <div class="upload-icon">📝</div>
+                            <div class="upload-text" id="missedclockin-upload-text">Upload Exception List Excel</div>
+                            <div class="upload-subtext" id="missedclockin-upload-subtext">Drag & drop or click to browse (.xlsx)</div>
+                            <input type="file" id="missedclockin-file" class="file-input" accept=".xlsx">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">
+                            <span>⚙️</span> Generate Warning Notices
+                        </button>
+                    </form>
+
+                    <div id="missedclockin-result" class="result-container"></div>
                 </div>
             </div>
         </div>
@@ -818,7 +895,7 @@
             } else {
                 // Find the sidebar item for this section
                 const sidebarItems = document.querySelectorAll('.sidebar-item');
-                const sectionIndex = ['home', 'gasrig', 'lennar'].indexOf(sectionName);
+                const sectionIndex = ['home', 'gasrig', 'lennar', 'missedclockin'].indexOf(sectionName);
                 if (sectionIndex >= 0 && sidebarItems[sectionIndex]) {
                     sidebarItems[sectionIndex].classList.add('active');
                 }
@@ -1029,13 +1106,157 @@
             }
         });
 
+        // Generic drag-and-drop helper. Wires up one upload-area so the user
+        // can drag a file onto it or click to browse, and shows the selected
+        // filename as feedback. Each module's upload area follows the same
+        // naming convention: <prefix>-drop, <prefix>-file,
+        // <prefix>-upload-text, <prefix>-upload-subtext.
+        function enableDropzone({ prefix, allowedExts, readyMessage }) {
+            const drop = document.getElementById(`${prefix}-drop`);
+            const fileInput = document.getElementById(`${prefix}-file`);
+            const uploadText = document.getElementById(`${prefix}-upload-text`);
+            const uploadSubtext = document.getElementById(`${prefix}-upload-subtext`);
+            if (!drop || !fileInput) return;
+
+            const extSet = new Set(allowedExts.map(e => e.toLowerCase()));
+            const extDisplay = allowedExts.join(', ');
+
+            const setFilename = (name) => {
+                if (uploadText) uploadText.textContent = name;
+                if (uploadSubtext) uploadSubtext.textContent = readyMessage;
+            };
+
+            ['dragenter', 'dragover'].forEach(ev =>
+                drop.addEventListener(ev, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    drop.classList.add('dragover');
+                })
+            );
+
+            ['dragleave', 'drop'].forEach(ev =>
+                drop.addEventListener(ev, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    drop.classList.remove('dragover');
+                })
+            );
+
+            drop.addEventListener('drop', (e) => {
+                const files = e.dataTransfer?.files;
+                if (!files || files.length === 0) return;
+                const file = files[0];
+                const name = file.name.toLowerCase();
+                const hasAllowedExt = [...extSet].some(ext => name.endsWith(ext));
+                if (!hasAllowedExt) {
+                    alert(`Please drop a file with one of these extensions: ${extDisplay}`);
+                    return;
+                }
+                // Assign dropped file to the hidden <input type="file"> so the
+                // form handler picks it up the same way as a click-to-browse.
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                setFilename(file.name);
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files && fileInput.files[0]) {
+                    setFilename(fileInput.files[0].name);
+                }
+            });
+        }
+
+        enableDropzone({
+            prefix: 'gasrig',
+            allowedExts: ['.xlsx'],
+            readyMessage: 'Ready to process — click "Process File"',
+        });
+        enableDropzone({
+            prefix: 'lennar',
+            allowedExts: ['.xlsx', '.xls'],
+            readyMessage: 'Ready to process — click "Process File"',
+        });
+        enableDropzone({
+            prefix: 'missedclockin',
+            allowedExts: ['.xlsx'],
+            readyMessage: 'Ready to process — click "Generate Warning Notices"',
+        });
+
+        // Missed Clock-In Form Handler
+        document.getElementById('missedclockin-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('missedclockin-file');
+            const resultDiv = document.getElementById('missedclockin-result');
+            const submitBtn = e.target.querySelector('.btn-primary');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Generating...';
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/v1/missed-clock-in/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => ({}));
+                    throw new Error(errBody.detail || 'Processing failed');
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const today = new Date().toISOString().slice(0, 10);
+                const filename = `Warning_Notices_${today}.xlsx`;
+
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon success">✓</div>
+                        <div class="result-title">Warning Notices Generated!</div>
+                    </div>
+                    <div class="result-details">
+                        <p>✓ Overview sheet + one sheet per Missing Start/Stop violation</p>
+                        <p>✓ Fields auto-filled; Hours Worked and Explanation left blank for manual fill-in</p>
+                        <a href="${url}" download="${filename}" class="btn btn-primary" style="margin-top: 15px;">
+                            <span>📊</span> Download Warning Notices
+                        </a>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-success');
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon error">✕</div>
+                        <div class="result-title">Processing Failed</div>
+                    </div>
+                    <div class="result-details">
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>⚙️</span> Generate Warning Notices';
+            }
+        });
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.metaKey || e.ctrlKey) {
                 const num = parseInt(e.key);
-                if (num >= 1 && num <= 3) {
+                if (num >= 1 && num <= 4) {
                     e.preventDefault();
-                    const sections = ['home', 'gasrig', 'lennar'];
+                    const sections = ['home', 'gasrig', 'lennar', 'missedclockin'];
                     const section = sections[num - 1];
                     if (section) {
                         showSection(section);

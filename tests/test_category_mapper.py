@@ -9,7 +9,7 @@ Key test scenarios:
 """
 
 import pytest
-from app.services.category_mapper import (
+from app.modules.lennar.category_mapper import (
     normalize_task_text,
     extract_scope_fragment,
     parse_signals,
