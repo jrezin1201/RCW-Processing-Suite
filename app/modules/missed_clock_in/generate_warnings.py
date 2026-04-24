@@ -42,24 +42,56 @@ def is_employee_name_row(row):
         return False
     if text.startswith("Time Records"):
         return False
+    if text.isdigit():
+        return False
     return True
+
+
+def extract_employee_number(row):
+    """Return the employee number as a string if row is a number-only row, else None.
+
+    Employee numbers may contain letters (e.g. "EDJ"), so accept any non-empty
+    string in col 0 when the rest of the row is empty.
+    """
+    c0 = row[0]
+    c2 = row[2] if len(row) > 2 else None
+    c9 = row[9] if len(row) > 9 else None
+    if pd.notna(c2) or pd.notna(c9):
+        return None
+    if isinstance(c0, (int, float)) and pd.notna(c0):
+        if isinstance(c0, float) and c0.is_integer():
+            return str(int(c0))
+        return str(c0).strip()
+    if isinstance(c0, str) and c0.strip():
+        return c0.strip()
+    return None
 
 
 def parse_exception_list(path: Path):
     df = pd.read_excel(path, header=None)
     records = []
     current_employee = None
+    awaiting_number = False
     for _, row in df.iterrows():
         row = row.tolist()
         while len(row) < 10:
             row.append(None)
 
+        if awaiting_number:
+            number = extract_employee_number(row)
+            if number is not None:
+                current_employee = f"{current_employee} - {number}"
+                awaiting_number = False
+                continue
+
         if is_employee_name_row(row):
             current_employee = row[0].strip()
+            awaiting_number = True
             continue
 
         err = row[9]
         if isinstance(err, str) and err.strip() in TRACKED_ERRORS and current_employee:
+            awaiting_number = False
             records.append({
                 "employee": current_employee,
                 "date": row[2],
@@ -637,7 +669,11 @@ def _write_overview_sheet(ws, records):
     else:
         for i, (name, cnt) in enumerate(repeat_offenders):
             r = emp_header_row + 1 + i
-            types = sorted({rec["error"] for rec in records if rec["employee"] == name})
+            type_counts = Counter(rec["error"] for rec in records if rec["employee"] == name)
+            types = [
+                f"{err}({n})" if n > 1 else err
+                for err, n in sorted(type_counts.items())
+            ]
             a = ws.cell(row=r, column=1)
             a.value = name
             a.font = body_font
@@ -688,8 +724,20 @@ def _write_overview_sheet(ws, records):
         b.alignment = center
         b.border = border
 
+    date_total_row = date_header_row + 1 + len(date_counter)
+    a = ws.cell(row=date_total_row, column=1)
+    a.value = "Total"
+    a.font = label_font
+    a.alignment = left
+    a.border = border
+    b = ws.cell(row=date_total_row, column=2)
+    b.value = sum(date_counter.values())
+    b.font = label_font
+    b.alignment = center
+    b.border = border
+
     # Clocked In Twice list
-    next_row = date_header_row + max(len(date_counter), 1) + 3
+    next_row = date_total_row + 3
     section_header(next_row, "Clocked In Twice", span=2)
 
     ct_header_row = next_row + 1
@@ -720,6 +768,18 @@ def _write_overview_sheet(ws, records):
             b.font = body_font
             b.alignment = center
             b.border = border
+
+        ct_total_row = ct_header_row + 1 + len(clocked_twice)
+        a = ws.cell(row=ct_total_row, column=1)
+        a.value = "Total"
+        a.font = label_font
+        a.alignment = left
+        a.border = border
+        b = ws.cell(row=ct_total_row, column=2)
+        b.value = len(clocked_twice)
+        b.font = label_font
+        b.alignment = center
+        b.border = border
 
 
 def build_workbook(records):
