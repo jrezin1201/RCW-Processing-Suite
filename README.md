@@ -1,13 +1,14 @@
 # RCW Processing Suite
 
 FastAPI service that processes Excel exports for RC Wendt Painting. Ships
-three pluggable modules:
+four pluggable modules:
 
 | Module | What it does |
 |--------|--------------|
 | **Lennar Tasks** (`/api/v1/uploads`) | Parses Lennar scheduled-task Excel exports, classifies tasks via signal-based category mapping, aggregates by lot/plan, and emits a formatted summary + QA report |
 | **Gas & Rig** (`/api/v1/gas-rig/process`) | Parses hours-worked files, extracts 4-digit job numbers, sums hours per job, calculates billing at $0.75/hour |
 | **Missed Clock-In** (`/api/v1/missed-clock-in/process`) | Parses timekeeping Exception List exports and generates formatted employee warning notices (Overview sheet + one 34-row notice per violation) |
+| **Merchant Charges** (`/api/v1/merchant-charges/process`) | Groups credit card transactions by brand with live `=SUM` subtotals, a Credits & Refunds section, dual grand totals, and a Summary dashboard sheet |
 
 Modules auto-register at startup — see
 [ARCHITECTURE.md](ARCHITECTURE.md#module-system) for the plug-in contract
@@ -95,6 +96,15 @@ curl -X POST http://localhost:8000/api/v1/missed-clock-in/process \
   --output Warning_Notices.xlsx
 ```
 
+### Merchant Charges (synchronous)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/merchant-charges/process \
+  -H "X-API-Key: $API_KEY" \
+  -F "file=@Transactions.xlsx" \
+  --output Merchant-Charges_Report.xlsx
+```
+
 (`X-API-Key` is only required if `API_KEY` is set.)
 
 ## Architecture
@@ -110,9 +120,10 @@ app/
 │   ├── registry.py      # Module auto-discovery
 │   └── security.py      # Shared: API key + upload validation + path safety
 ├── modules/
-│   ├── lennar/          # Excel parser + category mapper + aggregator + writer
-│   ├── gas_rig/         # Hours → job costs
-│   └── missed_clock_in/ # Exception List → warning notices
+│   ├── lennar/            # Excel parser + category mapper + aggregator + writer
+│   ├── gas_rig/           # Hours → job costs
+│   ├── missed_clock_in/   # Exception List → warning notices
+│   └── merchant_charges/  # Credit card transactions → grouped report
 ├── static/
 ├── templates/
 │   └── professional_interface.html

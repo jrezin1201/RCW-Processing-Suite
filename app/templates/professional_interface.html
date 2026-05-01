@@ -648,6 +648,14 @@
                     <div class="subtitle">Generate warning notices</div>
                 </div>
             </div>
+
+            <div class="sidebar-item" onclick="showSection('merchantcharges', this)">
+                <div class="icon">💳</div>
+                <div class="text">
+                    <div class="title">Merchant Charges</div>
+                    <div class="subtitle">Group transactions by merchant</div>
+                </div>
+            </div>
         </div>
 
         <!-- Content Area -->
@@ -713,6 +721,23 @@
                                 fully-formatted 34-row warning notice per violation, auto-populated with employee name, date, clock times,
                                 and bilingual English/Spanish policy descriptions. <strong>Clocked In Twice</strong> records are tracked in
                                 the Overview for reference.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Merchant Charges Description -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <div class="step-number" style="background: #9c27b0;">💳</div>
+                            <div class="step-title">Merchant Charges</div>
+                        </div>
+                        <div class="step-content">
+                            <p class="step-description" style="line-height: 1.8; font-size: 15px;">
+                                Groups credit card transactions by <strong>brand</strong>, automatically stripping store numbers and merging
+                                whitespace twins (e.g., <code>BURGER KING</code> and <code>BURGERKING</code>). Credits and refunds are pulled
+                                into their own section and summed separately. Output is a two-tab Excel file: a <strong>Summary</strong>
+                                dashboard (counts, date range, totals) and the detailed <strong>Merchant Charges</strong> tab with per-brand
+                                <code>=SUM</code> subtotals and dual grand totals (Charges Only + Net).
                             </p>
                         </div>
                     </div>
@@ -866,6 +891,62 @@
                     <div id="missedclockin-result" class="result-container"></div>
                 </div>
             </div>
+
+            <!-- Merchant Charges Section -->
+            <div id="merchantcharges-section" class="section" style="display: none;">
+                <div class="project-header">
+                    <div class="project-label">PROCESSING TOOL</div>
+                    <div class="project-title">Merchant Charges</div>
+                    <div class="project-subtitle">Brand-grouped transactions with Credits &amp; Refunds, dual grand totals, and a Summary dashboard</div>
+                </div>
+
+                <div class="instructions-card">
+                    <div class="instructions-header">
+                        <div class="instructions-icon">💳</div>
+                        <div class="instructions-title">About This Tool</div>
+                    </div>
+                    <div class="instructions-content" style="line-height: 1.8; font-size: 15px; margin-bottom: 25px;">
+                        Upload a credit card transactions export (.xlsx). You get back a two-tab Excel file:
+                        <ul style="margin: 12px 0 12px 22px; line-height: 1.8;">
+                            <li><strong>Summary</strong> &mdash; counts, date range, and dollar totals at a glance. All values are live
+                                formulas, so edits to the data tab flow through automatically.</li>
+                            <li><strong>Merchant Charges</strong> &mdash; transactions grouped by brand (store numbers stripped;
+                                <code>BURGER KING</code> and <code>BURGERKING</code> count as the same brand), with per-brand subtotals,
+                                a separate <strong>Credits &amp; Refunds</strong> section for negatives, and dual grand totals
+                                (<em>Charges Only</em> + <em>Net</em>).</li>
+                        </ul>
+                        Required input columns: <strong>Posted</strong>, <strong>Occurred</strong>, <strong>Merchant Name</strong>,
+                        <strong>Billed Amount</strong>. Other columns are ignored.
+                    </div>
+
+                    <!-- Example Format Section -->
+                    <div class="example-section" style="margin: 25px 0;">
+                        <h3 style="color: #e4e6eb; font-size: 16px; font-weight: 600; margin-bottom: 15px;">
+                            Make sure the Input document looks like this
+                        </h3>
+                        <div style="background: #24272e; padding: 20px; border-radius: 8px; border: 1px solid #3a3f4b;">
+                            <img src="/static/merchant_charges_ex_format.png"
+                                 alt="Merchant Charges Example Format"
+                                 style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                        </div>
+                    </div>
+
+                    <form id="merchantcharges-form">
+                        <div id="merchantcharges-drop" class="upload-area" onclick="document.getElementById('merchantcharges-file').click()">
+                            <div class="upload-icon">💳</div>
+                            <div class="upload-text" id="merchantcharges-upload-text">Upload Transactions Excel</div>
+                            <div class="upload-subtext" id="merchantcharges-upload-subtext">Drag &amp; drop or click to browse — must contain Posted, Occurred, Merchant Name, and Billed Amount columns (.xlsx)</div>
+                            <input type="file" id="merchantcharges-file" class="file-input" accept=".xlsx">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">
+                            <span>⚙️</span> Process File
+                        </button>
+                    </form>
+
+                    <div id="merchantcharges-result" class="result-container"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -895,7 +976,7 @@
             } else {
                 // Find the sidebar item for this section
                 const sidebarItems = document.querySelectorAll('.sidebar-item');
-                const sectionIndex = ['home', 'gasrig', 'lennar', 'missedclockin'].indexOf(sectionName);
+                const sectionIndex = ['home', 'gasrig', 'lennar', 'missedclockin', 'merchantcharges'].indexOf(sectionName);
                 if (sectionIndex >= 0 && sidebarItems[sectionIndex]) {
                     sidebarItems[sectionIndex].classList.add('active');
                 }
@@ -1182,6 +1263,11 @@
             allowedExts: ['.xlsx'],
             readyMessage: 'Ready to process — click "Generate Warning Notices"',
         });
+        enableDropzone({
+            prefix: 'merchantcharges',
+            allowedExts: ['.xlsx'],
+            readyMessage: 'Ready to process — click "Process File"',
+        });
 
         // Missed Clock-In Form Handler
         document.getElementById('missedclockin-form')?.addEventListener('submit', async (e) => {
@@ -1250,13 +1336,80 @@
             }
         });
 
+        // Merchant Charges Form Handler
+        document.getElementById('merchantcharges-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('merchantcharges-file');
+            const resultDiv = document.getElementById('merchantcharges-result');
+            const submitBtn = e.target.querySelector('.btn-primary');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/v1/merchant-charges/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => ({}));
+                    throw new Error(errBody.detail || 'Processing failed');
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const today = new Date().toISOString().slice(0, 10);
+                const filename = `Merchant-Charges_Report_${today}.xlsx`;
+
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon success">✓</div>
+                        <div class="result-title">Processing Complete!</div>
+                    </div>
+                    <div class="result-details">
+                        <p>✓ Transactions grouped by merchant with subtotals</p>
+                        <p>✓ Grand Total calculated as a live formula</p>
+                        <a href="${url}" download="${filename}" class="btn btn-primary" style="margin-top: 15px;">
+                            <span>📊</span> Download Report
+                        </a>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-success');
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon error">✕</div>
+                        <div class="result-title">Processing Failed</div>
+                    </div>
+                    <div class="result-details">
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>⚙️</span> Process File';
+            }
+        });
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.metaKey || e.ctrlKey) {
                 const num = parseInt(e.key);
-                if (num >= 1 && num <= 4) {
+                if (num >= 1 && num <= 5) {
                     e.preventDefault();
-                    const sections = ['home', 'gasrig', 'lennar', 'missedclockin'];
+                    const sections = ['home', 'gasrig', 'lennar', 'missedclockin', 'merchantcharges'];
                     const section = sections[num - 1];
                     if (section) {
                         showSection(section);
