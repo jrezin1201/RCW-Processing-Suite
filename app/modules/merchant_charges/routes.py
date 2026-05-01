@@ -1,7 +1,7 @@
 """API routes for the Merchant Charges processor."""
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -38,7 +38,7 @@ async def process(file: UploadFile = File(...)):
     output_path = settings.OUTPUT_DIR / f"merchant_charges_{uuid.uuid4()}.xlsx"
     output_path.write_bytes(output_bytes)
 
-    download_name = f"Merchant-Charges_Report_{datetime.now(timezone.utc).strftime('%Y-%m-%d')}.xlsx"
+    download_name = f"Merchant-Charges_Report_{datetime.now(UTC).strftime('%Y-%m-%d')}.xlsx"
     return FileResponse(
         path=output_path,
         filename=download_name,

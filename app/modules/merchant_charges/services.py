@@ -263,7 +263,7 @@ def _pick_display_brand(normalized_forms: list[str]) -> str:
 
 def group_and_sort(
     transactions: list[dict],
-) -> tuple["OrderedDict[str, list[dict]]", list[dict]]:
+) -> tuple[OrderedDict[str, list[dict]], list[dict]]:
     """Partition transactions by sign and group positives by brand.
 
     Grouping is whitespace-insensitive: two normalized brand strings collapse
@@ -347,7 +347,7 @@ class _DataSheetAddresses(NamedTuple):
 
 def _build_data_sheet(
     ws: Worksheet,
-    grouped: "OrderedDict[str, list[dict]]",
+    grouped: OrderedDict[str, list[dict]],
     negatives: list[dict],
 ) -> _DataSheetAddresses:
     """Populate the Merchant Charges sheet and return key cell addresses."""
@@ -498,7 +498,7 @@ def _format_date_short(d: datetime) -> str:
 
 def _build_summary_sheet(
     ws: Worksheet,
-    grouped: "OrderedDict[str, list[dict]]",
+    grouped: OrderedDict[str, list[dict]],
     negatives: list[dict],
     stats: LoadStats,
     addrs: _DataSheetAddresses,
@@ -528,9 +528,9 @@ def _build_summary_sheet(
     title.alignment = left
 
     def _kv(row: int, label: str, value, *, bold=True, fmt=None, border=None) -> None:
-        l = ws.cell(row=row, column=label_col, value=label)
-        l.font = arial
-        l.alignment = right
+        lbl = ws.cell(row=row, column=label_col, value=label)
+        lbl.font = arial
+        lbl.alignment = right
         v = ws.cell(row=row, column=value_col, value=value)
         v.font = arial_bold if bold else arial
         v.alignment = left
@@ -567,11 +567,15 @@ def _build_summary_sheet(
     neg_count = len(negatives)
     drop_total = sum(stats.drop_counts.values())
 
-    _kv(row, "Total transactions in input:", stats.total_input_rows, fmt=_INT_FORMAT); row += 1
-    _kv(row, "Charges (positive):", pos_count, fmt=_INT_FORMAT); row += 1
-    _kv(row, "Credits (negative):", neg_count, fmt=_INT_FORMAT); row += 1
+    _kv(row, "Total transactions in input:", stats.total_input_rows, fmt=_INT_FORMAT)
+    row += 1
+    _kv(row, "Charges (positive):", pos_count, fmt=_INT_FORMAT)
+    row += 1
+    _kv(row, "Credits (negative):", neg_count, fmt=_INT_FORMAT)
+    row += 1
     if drop_total > 0:
-        _kv(row, "Rows dropped (validation):", drop_total, fmt=_INT_FORMAT); row += 1
+        _kv(row, "Rows dropped (validation):", drop_total, fmt=_INT_FORMAT)
+        row += 1
         for reason in sorted(stats.drop_counts.keys()):
             _kv(row, f"   {reason}:", stats.drop_counts[reason], bold=False, fmt=_INT_FORMAT)
             row += 1
@@ -604,7 +608,7 @@ def _build_summary_sheet(
 # ---------------------------------------------------------------------------
 
 def write_report(
-    grouped: "OrderedDict[str, list[dict]]",
+    grouped: OrderedDict[str, list[dict]],
     negatives: list[dict] | None = None,
     *,
     stats: LoadStats | None = None,

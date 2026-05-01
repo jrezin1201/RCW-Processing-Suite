@@ -19,7 +19,6 @@ from app.modules.merchant_charges.services import (
     DROP_REASON_BLANK_MERCHANT,
     OUTPUT_SHEET_NAME,
     SUMMARY_SHEET_NAME,
-    LoadStats,
     MerchantChargesError,
     _brand_of,
     _pick_display_brand,
