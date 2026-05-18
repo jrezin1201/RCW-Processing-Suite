@@ -759,8 +759,9 @@
                     </div>
                     <div class="instructions-content" style="line-height: 1.8; font-size: 15px; margin-bottom: 25px;">
                         Upload an Excel file with location data containing 4-digit job numbers. The system automatically extracts job codes,
-                        sums hours by job, and calculates costs at $0.75 per hour. Output includes formatted job numbers, currency-styled
-                        dollar amounts, and summary totals. Compatible with both standard and RC Wendt export formats.
+                        sums hours by job, and calculates costs at the gas price you set below (default $0.75 per hour). Output includes
+                        formatted job numbers, currency-styled dollar amounts, and summary totals. Compatible with both standard and RC
+                        Wendt export formats.
                     </div>
 
                     <!-- Example Format Section -->
@@ -776,6 +777,22 @@
                     </div>
 
                     <form id="gasrig-form">
+                        <div style="background: #24272e; border: 1px solid #3a3f4b; border-radius: 8px; padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                            <label for="gasrig-rate" style="color: #e4e6eb; font-size: 14px; font-weight: 600; margin: 0;">
+                                Gas Price (per hour)
+                            </label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #8b92a0; font-size: 16px;">$</span>
+                                <input type="number" id="gasrig-rate" name="rate_per_hour"
+                                       value="0.75" min="0.01" max="1000" step="0.01" required
+                                       style="background: #1a1d23; color: #e4e6eb; border: 1px solid #3a3f4b; border-radius: 6px; padding: 8px 12px; font-size: 15px; width: 120px; font-family: inherit;">
+                                <span style="color: #8b92a0; font-size: 13px;">/ hour</span>
+                            </div>
+                            <span style="color: #8b92a0; font-size: 13px; flex: 1; min-width: 200px;">
+                                Default is $0.75. Change to recalculate dollars at any rate.
+                            </span>
+                        </div>
+
                         <div id="gasrig-drop" class="upload-area" onclick="document.getElementById('gasrig-file').click()">
                             <div class="upload-icon">⚡</div>
                             <div class="upload-text" id="gasrig-upload-text">Upload Hours Worked Excel</div>
@@ -1015,6 +1032,7 @@
             e.preventDefault();
 
             const fileInput = document.getElementById('gasrig-file');
+            const rateInput = document.getElementById('gasrig-rate');
             const resultDiv = document.getElementById('gasrig-result');
             const submitBtn = e.target.querySelector('.btn-primary');
 
@@ -1023,11 +1041,19 @@
                 return;
             }
 
+            const rate = parseFloat(rateInput.value);
+            if (!isFinite(rate) || rate <= 0) {
+                alert('Please enter a valid gas price greater than 0.');
+                rateInput.focus();
+                return;
+            }
+
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
 
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
+            formData.append('rate_per_hour', rate.toString());
 
             try {
                 const response = await fetch('/api/v1/gas-rig/process', {
@@ -1046,7 +1072,7 @@
                         <div class="result-title">Processing Complete!</div>
                     </div>
                     <div class="result-details">
-                        <p>✓ Job costs calculated at $0.75/hour</p>
+                        <p>✓ Job costs calculated at $${rate.toFixed(2)}/hour</p>
                         <p>✓ Summary generated with totals</p>
                         <a href="${url}" download="gas_rig_summary.xlsx" class="btn btn-primary" style="margin-top: 15px;">
                             <span>📊</span> Download Results

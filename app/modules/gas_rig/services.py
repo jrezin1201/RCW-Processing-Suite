@@ -6,7 +6,7 @@ from io import BytesIO
 
 import openpyxl
 
-RATE_PER_HOUR = 0.75
+DEFAULT_RATE_PER_HOUR = 0.75
 JOB_RE = re.compile(r"^\s*(\d{4})\b")
 
 
@@ -31,12 +31,15 @@ def _to_float(x) -> float:
         return 0.0
 
 
-def compute_job_costs_from_xlsx(file_bytes: bytes) -> list[RowOut]:
+def compute_job_costs_from_xlsx(
+    file_bytes: bytes,
+    rate_per_hour: float = DEFAULT_RATE_PER_HOUR,
+) -> list[RowOut]:
     """
     Reads the first sheet of an XLSX and computes:
       - JobNumber: first 4 digits at start of Location
       - Hours: Total hours from col L (or M as fallback)
-      - Dollars: Hours * 0.75
+      - Dollars: Hours * rate_per_hour (user-configurable)
 
     Supports two formats:
     1. Standard: Job in B, Employee in D, Hours in L
@@ -141,18 +144,21 @@ def compute_job_costs_from_xlsx(file_bytes: bytes) -> list[RowOut]:
     # Build output rows
     out: list[RowOut] = []
     for job, hours in sorted(totals.items(), key=lambda t: int(t[0])):
-        dollars = round(hours * RATE_PER_HOUR, 2)
+        dollars = round(hours * rate_per_hour, 2)
         out.append(RowOut(job_number=job, hours=round(hours, 2), dollars=dollars))
 
     return out
 
 
-def build_output_workbook(rows: list[RowOut]) -> bytes:
+def build_output_workbook(
+    rows: list[RowOut],
+    rate_per_hour: float = DEFAULT_RATE_PER_HOUR,
+) -> bytes:
     """
     Creates an XLSX output file as bytes with columns:
-    JobNumber | Hours | Dollars
+    JobNumber | Dollars | Hours
 
-    Includes totals at the top.
+    Includes totals and the $/hour rate at the top.
     """
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -166,6 +172,7 @@ def build_output_workbook(rows: list[RowOut]) -> bytes:
     ws.append(["SUMMARY", "", ""])
     ws.append(["Total Hours:", round(total_hours, 2), ""])
     ws.append(["Total Dollars:", round(total_dollars, 2), ""])  # Store as number, not string
+    ws.append(["$/Hour:", round(float(rate_per_hour), 2), ""])  # Configurable rate
     ws.append(["", "", ""])  # Empty row for spacing
 
     # Add headers
@@ -180,10 +187,12 @@ def build_output_workbook(rows: list[RowOut]) -> bytes:
     ws["A1"].font = openpyxl.styles.Font(bold=True, size=14)
     ws["A2"].font = openpyxl.styles.Font(bold=True)
     ws["A3"].font = openpyxl.styles.Font(bold=True)
+    ws["A4"].font = openpyxl.styles.Font(bold=True)
 
     # Bold and style the summary values
     ws["B2"].font = openpyxl.styles.Font(bold=True, size=12)
     ws["B3"].font = openpyxl.styles.Font(bold=True, size=12)
+    ws["B4"].font = openpyxl.styles.Font(bold=True, size=12)
 
     # Apply number format to Total Hours (2 decimal places)
     ws["B2"].number_format = '#,##0.00'
@@ -191,13 +200,16 @@ def build_output_workbook(rows: list[RowOut]) -> bytes:
     # Apply currency format to Total Dollars
     ws["B3"].number_format = '"$"#,##0.00'
 
-    # Bold headers row
-    for cell in ws[5]:  # Headers are now in row 5
+    # Apply currency format to $/Hour
+    ws["B4"].number_format = '"$"#,##0.00'
+
+    # Bold headers row (now row 6)
+    for cell in ws[6]:
         if cell.value:
             cell.font = openpyxl.styles.Font(bold=True)
 
-    # Apply formatting to all data rows
-    for row_num in range(6, 6 + len(rows)):  # Data starts at row 6
+    # Apply formatting to all data rows (now starting at row 7)
+    for row_num in range(7, 7 + len(rows)):
         ws.cell(row=row_num, column=2).number_format = '"$"#,##0.00'  # Column B (Dollars)
         ws.cell(row=row_num, column=3).number_format = '#,##0.00'  # Column C (Hours)
 
