@@ -58,7 +58,7 @@ def extract_employee_number(row):
     c9 = row[9] if len(row) > 9 else None
     if pd.notna(c2) or pd.notna(c9):
         return None
-    if isinstance(c0, (int, float)) and pd.notna(c0):
+    if isinstance(c0, int | float) and pd.notna(c0):
         if isinstance(c0, float) and c0.is_integer():
             return str(int(c0))
         return str(c0).strip()

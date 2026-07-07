@@ -81,7 +81,7 @@ def _coerce_amount(value) -> float | None:
     """Convert a Debit/Credit cell to float; return None for blank/unparseable."""
     if value is None:
         return None
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return float(value)
     s = str(value).strip()
     if not s:
