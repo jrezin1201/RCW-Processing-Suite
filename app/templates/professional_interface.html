@@ -656,6 +656,14 @@
                     <div class="subtitle">Group transactions by merchant</div>
                 </div>
             </div>
+
+            <div class="sidebar-item" onclick="showSection('capitalonecard', this)">
+                <div class="icon">🏦</div>
+                <div class="text">
+                    <div class="title">Capital One Card Report</div>
+                    <div class="subtitle">Group card charges by category</div>
+                </div>
+            </div>
         </div>
 
         <!-- Content Area -->
@@ -738,6 +746,25 @@
                                 into their own section and summed separately. Output is a two-tab Excel file: a <strong>Summary</strong>
                                 dashboard (counts, date range, totals) and the detailed <strong>Merchant Charges</strong> tab with per-brand
                                 <code>=SUM</code> subtotals and dual grand totals (Charges Only + Net).
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Capital One Card Report Description -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <div class="step-number" style="background: #00bcd4;">🏦</div>
+                            <div class="step-title">Capital One Card Report</div>
+                        </div>
+                        <div class="step-content">
+                            <p class="step-description" style="line-height: 1.8; font-size: 15px;">
+                                Groups Capital One card transactions by <strong>Category</strong>, then <strong>Description</strong>,
+                                while keeping each transaction separate for job costing. Upload the Capital One export (CSV or Excel) and get back
+                                a clean Excel report with only <strong>Transaction Date</strong>, <strong>Description</strong>,
+                                <strong>Debit</strong>, and <strong>Credit</strong> columns — duplicate vendors are never combined,
+                                every purchase stays on its own row, each Category block ends with a bold subtotal, and a single
+                                bold <strong>Grand Total</strong> closes the report. An <strong>Analytics</strong> tab summarizes
+                                transaction counts, totals per category, and the card number(s) used.
                             </p>
                         </div>
                     </div>
@@ -964,6 +991,65 @@
                     <div id="merchantcharges-result" class="result-container"></div>
                 </div>
             </div>
+
+            <!-- Capital One Card Report Section -->
+            <div id="capitalonecard-section" class="section" style="display: none;">
+                <div class="project-header">
+                    <div class="project-label">PROCESSING TOOL</div>
+                    <div class="project-title">Capital One Card Report</div>
+                    <div class="project-subtitle">Category-grouped card transactions, sorted by vendor, ready for manual job costing</div>
+                </div>
+
+                <div class="instructions-card">
+                    <div class="instructions-header">
+                        <div class="instructions-icon">🏦</div>
+                        <div class="instructions-title">About This Tool</div>
+                    </div>
+                    <div class="instructions-content" style="line-height: 1.8; font-size: 15px; margin-bottom: 25px;">
+                        Upload a <strong>Capital One card export</strong> (.csv or .xlsx). You get back a clean Excel report with transactions
+                        grouped by <strong>Category</strong> and sorted by <strong>Description</strong> within each category.
+                        Every transaction stays on its own row — duplicate vendors are never combined and nothing is summarized —
+                        so each purchase can be split and job-costed manually. Each Category block ends with a bold
+                        <strong>subtotal</strong> (live <code>=SUM</code> formula), and an <strong>Analytics</strong> tab
+                        summarizes the transaction count, grand totals, per-category counts and totals, and the card
+                        number(s) used. The output keeps only
+                        <strong>Transaction Date</strong>, <strong>Description</strong>, <strong>Debit</strong>, and
+                        <strong>Credit</strong> (Posted Date and Card No. are ignored), with one bold <strong>Grand Total</strong>
+                        at the bottom of the whole report.
+                        <br><br>
+                        Required input columns: <strong>Transaction Date</strong>, <strong>Description</strong>,
+                        <strong>Category</strong>, <strong>Debit</strong>, <strong>Credit</strong>. Transactions with a blank
+                        Category are placed under <em>Uncategorized</em>.
+                    </div>
+
+                    <!-- Example Format Section -->
+                    <div class="example-section" style="margin: 25px 0;">
+                        <h3 style="color: #e4e6eb; font-size: 16px; font-weight: 600; margin-bottom: 15px;">
+                            Make sure the input document looks like this
+                        </h3>
+                        <div style="background: #24272e; padding: 20px; border-radius: 8px; border: 1px solid #3a3f4b;">
+                            <img src="/static/capital_one_card_ex_format.png"
+                                 alt="Capital One Card Report Example Format"
+                                 style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                        </div>
+                    </div>
+
+                    <form id="capitalonecard-form">
+                        <div id="capitalonecard-drop" class="upload-area" onclick="document.getElementById('capitalonecard-file').click()">
+                            <div class="upload-icon">🏦</div>
+                            <div class="upload-text" id="capitalonecard-upload-text">Upload Capital One Export</div>
+                            <div class="upload-subtext" id="capitalonecard-upload-subtext">Drag &amp; drop or click to browse — must contain Transaction Date, Description, Category, Debit, and Credit columns (.csv, .xlsx)</div>
+                            <input type="file" id="capitalonecard-file" class="file-input" accept=".csv,.xlsx">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">
+                            <span>⚙️</span> Process File
+                        </button>
+                    </form>
+
+                    <div id="capitalonecard-result" class="result-container"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -993,7 +1079,7 @@
             } else {
                 // Find the sidebar item for this section
                 const sidebarItems = document.querySelectorAll('.sidebar-item');
-                const sectionIndex = ['home', 'gasrig', 'lennar', 'missedclockin', 'merchantcharges'].indexOf(sectionName);
+                const sectionIndex = ['home', 'gasrig', 'lennar', 'missedclockin', 'merchantcharges', 'capitalonecard'].indexOf(sectionName);
                 if (sectionIndex >= 0 && sidebarItems[sectionIndex]) {
                     sidebarItems[sectionIndex].classList.add('active');
                 }
@@ -1294,6 +1380,11 @@
             allowedExts: ['.xlsx'],
             readyMessage: 'Ready to process — click "Process File"',
         });
+        enableDropzone({
+            prefix: 'capitalonecard',
+            allowedExts: ['.csv', '.xlsx'],
+            readyMessage: 'Ready to process — click "Process File"',
+        });
 
         // Missed Clock-In Form Handler
         document.getElementById('missedclockin-form')?.addEventListener('submit', async (e) => {
@@ -1429,13 +1520,80 @@
             }
         });
 
+        // Capital One Card Report Form Handler
+        document.getElementById('capitalonecard-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('capitalonecard-file');
+            const resultDiv = document.getElementById('capitalonecard-result');
+            const submitBtn = e.target.querySelector('.btn-primary');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/v1/capital-one-card/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => ({}));
+                    throw new Error(errBody.detail || 'Processing failed');
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const today = new Date().toISOString().slice(0, 10);
+                const filename = `Capital-One-Card_Report_${today}.xlsx`;
+
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon success">✓</div>
+                        <div class="result-title">Processing Complete!</div>
+                    </div>
+                    <div class="result-details">
+                        <p>✓ Transactions grouped by Category, sorted by Description, with per-category subtotals</p>
+                        <p>✓ Analytics tab with counts, totals, and card number(s) — plus one Grand Total at the bottom</p>
+                        <a href="${url}" download="${filename}" class="btn btn-primary" style="margin-top: 15px;">
+                            <span>📊</span> Download Report
+                        </a>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-success');
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-icon error">✕</div>
+                        <div class="result-title">Processing Failed</div>
+                    </div>
+                    <div class="result-details">
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                resultDiv.classList.add('show', 'result-error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>⚙️</span> Process File';
+            }
+        });
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.metaKey || e.ctrlKey) {
                 const num = parseInt(e.key);
-                if (num >= 1 && num <= 5) {
+                if (num >= 1 && num <= 6) {
                     e.preventDefault();
-                    const sections = ['home', 'gasrig', 'lennar', 'missedclockin', 'merchantcharges'];
+                    const sections = ['home', 'gasrig', 'lennar', 'missedclockin', 'merchantcharges', 'capitalonecard'];
                     const section = sections[num - 1];
                     if (section) {
                         showSection(section);
